@@ -1,10 +1,18 @@
 import React from 'react';
-import { Text, View } from 'react-native';
+import { NavigationContainer } from '@react-navigation/native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import Lander from './src/Lander';
 
-export default function App() {
-  return (
-    <View>
-      <Text>Hello world!!!!</Text>
-    </View>
-  );
+const Stack = createNativeStackNavigator();
+
+const App = () => {
+    return (
+        <NavigationContainer>
+            <Stack.Navigator>
+                <Stack.Screen name="Lander" component={Lander} />
+            </Stack.Navigator>
+        </NavigationContainer>
+    );
 }
+
+export default App;
