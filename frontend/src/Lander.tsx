@@ -1,32 +1,34 @@
 import React from "react";
 import { Text, StyleSheet, View, Pressable } from "react-native";
+import Center from "./Center";
 import { Theme } from "./Theme";
 
-const Lander = () => {
+const Lander = ({ navigation }: { navigation: any }) => {
     return (
-        <View style={styles.content}>
-            <Text style={styles.header}>Welcome to Nok</Text>
+        <Center>
+            <View style={styles.content}>
+                <Text style={styles.header}>Welcome to Nok</Text>
 
-            <Pressable style={[styles.button, styles.signUp]}>
-                <Text style={styles.buttonText}>Sign Up</Text>
-            </Pressable>
-            <Pressable style={[styles.button, styles.login]}>
-                <Text style={styles.buttonText}>Login</Text>
-            </Pressable>
-        </View>
+                <Pressable style={[styles.button, styles.signUp]}>
+                    <Text style={styles.buttonText}>Sign Up</Text>
+                </Pressable>
+                <Pressable onPress={() => { navigation.navigate('Login') }} style={[styles.button, styles.login]}>
+                    <Text style={styles.buttonText}>Login</Text>
+                </Pressable>
+            </View>
+        </Center>
     );
 }
 
 const styles = StyleSheet.create({
     content: {
-        flex: 1,
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: 50
+        alignSelf: 'stretch',
+        paddingHorizontal: 25
     },
     header: {
         fontSize: Theme.fontSizes.large,
-        paddingBottom: 25
+        paddingBottom: 25,
+        textAlign: 'center'
     },
     button: {
         paddingVertical: 10,
