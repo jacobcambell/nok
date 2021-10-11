@@ -10,6 +10,7 @@ export const Theme = {
         white: '#FFFFFF'
     },
     fontSizes: {
+        small: 13,
         normal: 16,
         medium: 22,
         large: 28
