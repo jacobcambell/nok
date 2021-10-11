@@ -9,7 +9,7 @@ const Lander = ({ navigation }: { navigation: any }) => {
             <View style={styles.content}>
                 <Text style={styles.header}>Welcome to Nok</Text>
 
-                <Pressable style={[styles.button, styles.register]}>
+                <Pressable onPress={() => { navigation.navigate('Register') }} style={[styles.button, styles.register]}>
                     <Text style={styles.buttonText}>Sign Up</Text>
                 </Pressable>
                 <Pressable onPress={() => { navigation.navigate('Login') }} style={[styles.button, styles.login]}>
