@@ -9,7 +9,7 @@ const Lander = ({ navigation }: { navigation: any }) => {
             <View style={styles.content}>
                 <Text style={styles.header}>Welcome to Nok</Text>
 
-                <Pressable style={[styles.button, styles.signUp]}>
+                <Pressable style={[styles.button, styles.register]}>
                     <Text style={styles.buttonText}>Sign Up</Text>
                 </Pressable>
                 <Pressable onPress={() => { navigation.navigate('Login') }} style={[styles.button, styles.login]}>
@@ -28,7 +28,8 @@ const styles = StyleSheet.create({
     header: {
         fontSize: Theme.fontSizes.large,
         paddingBottom: 25,
-        textAlign: 'center'
+        textAlign: 'center',
+        color: Theme.colors.white
     },
     button: {
         paddingVertical: 10,
@@ -41,11 +42,11 @@ const styles = StyleSheet.create({
         color: Theme.colors.white,
         fontWeight: 'bold'
     },
-    signUp: {
-        backgroundColor: Theme.colors.darkblue
+    register: {
+        backgroundColor: Theme.colors.mediumblue
     },
     login: {
-        backgroundColor: Theme.colors.mediumblue
+        backgroundColor: Theme.colors.black
     }
 });
 
