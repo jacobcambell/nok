@@ -4,7 +4,7 @@ import { TextInput } from 'react-native-gesture-handler';
 import Center from '../Center';
 import { Theme } from '../Theme';
 
-const Login = () => {
+const Login = ({ navigation }: { navigation: any }) => {
     return (
         <Center>
             <View style={styles.content}>
@@ -16,6 +16,8 @@ const Login = () => {
                 <Pressable style={styles.button}>
                     <Text style={styles.buttonText}>Login</Text>
                 </Pressable>
+
+                <Text onPress={() => { navigation.navigate('Register') }} style={styles.smallLink}>Don't have an account?</Text>
             </View>
         </Center>
     );
@@ -55,6 +57,14 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         fontSize: Theme.fontSizes.normal
     },
+    smallLink: {
+        color: Theme.colors.white,
+        fontSize: Theme.fontSizes.normal,
+        marginVertical: 15,
+        paddingVertical: 5,
+        textAlign: 'center'
+
+    }
 });
 
 export default Login;
