@@ -4,6 +4,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import Lander from './src/Lander';
 import Login from './src/pages/Login';
 import Register from './src/pages/Register';
+import Main from './src/Main';
 
 const Stack = createNativeStackNavigator();
 
@@ -41,6 +42,7 @@ const App = () => {
                 <Stack.Screen name="Lander" component={Lander} />
                 <Stack.Screen name="Login" component={Login} />
                 <Stack.Screen name="Register" component={Register} />
+                <Stack.Screen name="Main" component={Main} />
             </Stack.Navigator>
         </NavigationContainer>
     );
