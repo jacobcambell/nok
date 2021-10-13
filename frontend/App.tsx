@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import Lander from './src/Lander';
@@ -19,7 +19,22 @@ const firebaseConfig = {
 };
 const app = initializeApp(firebaseConfig);
 
+import { getAuth, onAuthStateChanged } from '@firebase/auth';
+import * as SecureStore from 'expo-secure-store';
+
 const App = () => {
+    const auth = getAuth();
+
+    useEffect(() => {
+        onAuthStateChanged(auth, (user) => {
+            user?.getIdToken()
+                .then(token => {
+                    // Save Firebase JWT to local storage
+                    SecureStore.setItemAsync('firebase_jwt', token);
+                })
+        });
+    });
+
     return (
         <NavigationContainer>
             <Stack.Navigator screenOptions={{ headerShown: false, animation: 'none' }}>
