@@ -5,6 +5,7 @@ import Center from '../Center';
 import { Theme } from '../Theme';
 import { getAuth, signInWithEmailAndPassword } from 'firebase/auth';
 import * as SecureStore from 'expo-secure-store';
+import { useFocusEffect } from '@react-navigation/native';
 
 const Login = ({ navigation }: { navigation: any }) => {
 
@@ -18,6 +19,17 @@ const Login = ({ navigation }: { navigation: any }) => {
                 alert('Error logging in');
             })
     }
+
+    useFocusEffect(() => {
+        SecureStore.getItemAsync('firebase_jwt')
+            .then(j => {
+                if (j !== null) {
+                    // User is already logged in
+                    navigation.navigate('Main');
+                }
+            })
+        console.log('deleted')
+    });
 
     return (
         <Center>
