@@ -1,14 +1,33 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { TextInput } from 'react-native-gesture-handler';
 import Center from '../Center';
 import { Theme } from '../Theme';
+import { getAuth, onAuthStateChanged, createUserWithEmailAndPassword } from "firebase/auth";
+import * as SecureStore from 'expo-secure-store';
 
 const Register = ({ navigation }: { navigation: any }) => {
 
-    const [email, setEmail] = useState<string>();
-    const [password, setPassword] = useState<string>();
-    const [cPassword, setCPassword] = useState<string>();
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [cPassword, setCPassword] = useState('');
+    const auth = getAuth();
+
+    useEffect(() => {
+        onAuthStateChanged(auth, (user) => {
+            user?.getIdToken()
+                .then(token => {
+                    SecureStore.setItemAsync('firebase_jwt', token);
+                })
+        });
+    }, []);
+
+    const handleSignup = () => {
+        createUserWithEmailAndPassword(auth, email, password)
+            .catch((error) => {
+                alert('Error when signing up');
+            });
+    }
 
     return (
         <Center>
@@ -19,7 +38,7 @@ const Register = ({ navigation }: { navigation: any }) => {
                 <TextInput onChangeText={e => setPassword(e)} secureTextEntry={true} placeholder="Password" style={styles.input} placeholderTextColor={Theme.colors.white}></TextInput>
                 <TextInput onChangeText={e => setCPassword(e)} secureTextEntry={true} placeholder="Confirm Password" style={styles.input} placeholderTextColor={Theme.colors.white}></TextInput>
 
-                <Pressable style={styles.button}>
+                <Pressable onPress={handleSignup} style={styles.button}>
                     <Text style={styles.buttonText}>Sign Up</Text>
                 </Pressable>
 
