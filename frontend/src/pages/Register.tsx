@@ -3,7 +3,7 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import { TextInput } from 'react-native-gesture-handler';
 import Center from '../Center';
 import { Theme } from '../Theme';
-import { getAuth, onAuthStateChanged, createUserWithEmailAndPassword } from "firebase/auth";
+import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
 import * as SecureStore from 'expo-secure-store';
 
 const Register = ({ navigation }: { navigation: any }) => {
@@ -12,15 +12,6 @@ const Register = ({ navigation }: { navigation: any }) => {
     const [password, setPassword] = useState('');
     const [cPassword, setCPassword] = useState('');
     const auth = getAuth();
-
-    useEffect(() => {
-        onAuthStateChanged(auth, (user) => {
-            user?.getIdToken()
-                .then(token => {
-                    SecureStore.setItemAsync('firebase_jwt', token);
-                })
-        });
-    }, []);
 
     const handleSignup = () => {
         createUserWithEmailAndPassword(auth, email, password)
