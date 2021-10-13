@@ -1,18 +1,23 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { TextInput } from 'react-native-gesture-handler';
 import Center from '../Center';
 import { Theme } from '../Theme';
 
 const Register = ({ navigation }: { navigation: any }) => {
+
+    const [email, setEmail] = useState<string>();
+    const [password, setPassword] = useState<string>();
+    const [cPassword, setCPassword] = useState<string>();
+
     return (
         <Center>
             <View style={styles.content}>
                 <Text style={styles.header}>Sign Up</Text>
 
-                <TextInput placeholder="Email" style={styles.input} placeholderTextColor={Theme.colors.white}></TextInput>
-                <TextInput secureTextEntry={true} placeholder="Password" style={styles.input} placeholderTextColor={Theme.colors.white}></TextInput>
-                <TextInput secureTextEntry={true} placeholder="Confirm Password" style={styles.input} placeholderTextColor={Theme.colors.white}></TextInput>
+                <TextInput onChangeText={e => setEmail(e)} placeholder="Email" style={styles.input} placeholderTextColor={Theme.colors.white}></TextInput>
+                <TextInput onChangeText={e => setPassword(e)} secureTextEntry={true} placeholder="Password" style={styles.input} placeholderTextColor={Theme.colors.white}></TextInput>
+                <TextInput onChangeText={e => setCPassword(e)} secureTextEntry={true} placeholder="Confirm Password" style={styles.input} placeholderTextColor={Theme.colors.white}></TextInput>
 
                 <Pressable style={styles.button}>
                     <Text style={styles.buttonText}>Sign Up</Text>
