@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { TextInput } from 'react-native-gesture-handler';
 import Center from '../Center';
