@@ -1,19 +1,33 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { TextInput } from 'react-native-gesture-handler';
 import Center from '../Center';
 import { Theme } from '../Theme';
+import { getAuth, signInWithEmailAndPassword } from 'firebase/auth';
+import * as SecureStore from 'expo-secure-store';
 
 const Login = ({ navigation }: { navigation: any }) => {
+
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const auth = getAuth();
+
+    const handleLogin = () => {
+        signInWithEmailAndPassword(auth, email, password)
+            .catch((err) => {
+                alert('Error logging in');
+            })
+    }
+
     return (
         <Center>
             <View style={styles.content}>
                 <Text style={styles.header}>Login</Text>
 
-                <TextInput placeholder="Email" style={styles.input} placeholderTextColor={Theme.colors.white}></TextInput>
-                <TextInput secureTextEntry={true} placeholder="Password" style={styles.input} placeholderTextColor={Theme.colors.white}></TextInput>
+                <TextInput onChangeText={e => setEmail(e)} placeholder="Email" style={styles.input} placeholderTextColor={Theme.colors.white}></TextInput>
+                <TextInput onChangeText={e => setPassword(e)} secureTextEntry={true} placeholder="Password" style={styles.input} placeholderTextColor={Theme.colors.white}></TextInput>
 
-                <Pressable style={styles.button}>
+                <Pressable onPress={handleLogin} style={styles.button}>
                     <Text style={styles.buttonText}>Login</Text>
                 </Pressable>
 
