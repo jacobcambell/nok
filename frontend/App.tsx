@@ -7,6 +7,18 @@ import Register from './src/pages/Register';
 
 const Stack = createNativeStackNavigator();
 
+// Firebase
+import { initializeApp } from "firebase/app";
+const firebaseConfig = {
+    apiKey: "AIzaSyAnQ4G4n0kigRIap659em1tB3HnLUiL2I8",
+    authDomain: "nokapp-2be53.firebaseapp.com",
+    projectId: "nokapp-2be53",
+    storageBucket: "nokapp-2be53.appspot.com",
+    messagingSenderId: "752835443920",
+    appId: "1:752835443920:web:b0e6a212860b2d214472d5"
+};
+const app = initializeApp(firebaseConfig);
+
 const App = () => {
     return (
         <NavigationContainer>
