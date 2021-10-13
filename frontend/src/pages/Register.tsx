@@ -5,6 +5,7 @@ import Center from '../Center';
 import { Theme } from '../Theme';
 import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
 import * as SecureStore from 'expo-secure-store';
+import { useFocusEffect } from '@react-navigation/core';
 
 const Register = ({ navigation }: { navigation: any }) => {
 
@@ -15,10 +16,23 @@ const Register = ({ navigation }: { navigation: any }) => {
 
     const handleSignup = () => {
         createUserWithEmailAndPassword(auth, email, password)
+            .then(() => {
+                navigation.navigate('Main');
+            })
             .catch((error) => {
                 alert('Error when signing up');
             });
     }
+
+    useFocusEffect(() => {
+        SecureStore.getItemAsync('firebase_jwt')
+            .then(j => {
+                if (j !== null) {
+                    // User is already logged in
+                    navigation.navigate('Main');
+                }
+            })
+    });
 
     return (
         <Center>

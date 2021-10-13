@@ -15,6 +15,9 @@ const Login = ({ navigation }: { navigation: any }) => {
 
     const handleLogin = () => {
         signInWithEmailAndPassword(auth, email, password)
+            .then(() => {
+                navigation.navigate('Main');
+            })
             .catch((err) => {
                 alert('Error logging in');
             })
@@ -28,7 +31,6 @@ const Login = ({ navigation }: { navigation: any }) => {
                     navigation.navigate('Main');
                 }
             })
-        console.log('deleted')
     });
 
     return (
