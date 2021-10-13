@@ -2,8 +2,21 @@ import React from "react";
 import { Text, StyleSheet, View, Pressable } from "react-native";
 import Center from "./Center";
 import { Theme } from "./Theme";
+import { useFocusEffect } from "@react-navigation/core";
+import * as SecureStore from 'expo-secure-store';
 
 const Lander = ({ navigation }: { navigation: any }) => {
+
+    useFocusEffect(() => {
+        SecureStore.getItemAsync('firebase_jwt')
+            .then(j => {
+                if (j !== null) {
+                    // User is already logged in
+                    navigation.navigate('Main');
+                }
+            })
+    });
+
     return (
         <Center>
             <View style={styles.content}>
