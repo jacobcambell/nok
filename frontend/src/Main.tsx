@@ -18,19 +18,17 @@ const Main = ({ navigation }: { navigation: any }) => {
     useEffect(() => {
         // Every time the logged in user renders this main component, we want to send
         // a ping to the server with the user object
-        SecureStore.getItemAsync('firebase_idToken')
-            .then((idToken) => {
-                if (idToken === null) {
-                    // User should not be on this screen without a firebase_idToken
-                    navigation.navigate('Lander');
-                    return;
-                }
 
-                // Ping the api with the user's idToken
-                axios.post(`${API_ENDPOINT}/ping`, {
-                    idToken
+        // Wait a few seconds for AuthContext to update the token
+        setTimeout(() => {
+            SecureStore.getItemAsync('firebase_idToken')
+                .then((idToken) => {
+                    // Ping the api with the user's idToken
+                    axios.post(`${API_ENDPOINT}/ping`, {
+                        idToken
+                    })
                 })
-            })
+        }, 3000);
     }, []);
 
     return (
