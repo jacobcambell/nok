@@ -1,7 +1,9 @@
 require('dotenv').config();
+import e from 'express';
 import Express from 'express';
 import * as firebaseAdmin from 'firebase-admin';
 import mysql from 'mysql';
+import { generateName } from './generateName';
 const app = Express();
 const PORT = process.env.PORT || 4000;
 app.use(Express.json())
@@ -29,6 +31,7 @@ app.post('/ping', (req: Express.Request, res: Express.Response) => {
 
     if (check.includes(undefined)) {
         res.sendStatus(400);
+        return;
     }
 
     firebaseAdmin
@@ -36,12 +39,28 @@ app.post('/ping', (req: Express.Request, res: Express.Response) => {
         .verifyIdToken(req.body.idToken)
         .then((decodedToken) => {
             const uid = decodedToken.uid;
-            console.log(decodedToken)
-            res.sendStatus(200);
+
+            // Valid Firebase user. Next we want to check if this uid exists in the users table
+            con.query('SELECT COUNT(*) AS c FROM users WHERE users.firebase_uid=?', [uid], (err, results) => {
+                if (err) throw err;
+
+                if (results[0].c === 0) {
+                    // UID is not in our users table. Let's add them to it
+                    let newUsername = generateName();
+                    con.query('INSERT INTO users (firebase_uid, username) VALUES (?, ?)', [uid, newUsername], (err, results) => {
+                        if (err) throw err;
+                    });
+                }
+                else {
+                    // This uid already exists in our users table
+                    console.log('This person already exists')
+                }
+
+                res.sendStatus(200);
+            });
         })
         .catch((error) => {
-            console.log(error)
-            res.sendStatus(200);
+            res.sendStatus(400);
         });
 })
 app.listen(PORT, () => {
