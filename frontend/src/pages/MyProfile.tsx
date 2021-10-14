@@ -1,19 +1,28 @@
-import React, { useContext } from 'react'
+import React, { useContext, useState } from 'react'
 import { Pressable, StyleSheet, Text } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { AuthContext } from '../contexts/AuthContext';
 import { Theme } from '../Theme';
 import { signOut } from '@firebase/auth';
 import * as SecureStore from 'expo-secure-store';
+import { useFocusEffect } from '@react-navigation/core';
+import axios, { AxiosResponse } from 'axios';
+import { API_ENDPOINT } from '../EnvironmentVariables';
+
+interface getUsernameFields {
+    error: boolean,
+    username: string
+}
 
 export default function MyProfile({ navigation }: { navigation: any }) {
 
     const { firebaseAuth } = useContext(AuthContext);
+    const [myUsername, setMyUsername] = useState('');
 
     const handleLogout = () => {
         signOut(firebaseAuth).then(() => {
             // Remove user from SecureStore
-            SecureStore.deleteItemAsync('firebase_user')
+            SecureStore.deleteItemAsync('firebase_idToken')
                 .then(() => {
                     navigation.navigate('Lander');
                 })
@@ -22,13 +31,29 @@ export default function MyProfile({ navigation }: { navigation: any }) {
         });
     }
 
+    useFocusEffect(() => {
+        // Fetch my username from the server
+        SecureStore.getItemAsync('firebase_idToken')
+            .then((idToken) => {
+                axios.post<getUsernameFields>(`${API_ENDPOINT}/get-my-username`, {
+                    idToken
+                })
+                    .then((results) => {
+                        setMyUsername(results.data.username);
+                    })
+                    .catch(() => {
+                        alert('Could not get username from server');
+                    })
+            })
+    });
+
     return (
         <SafeAreaView style={styles.content}>
             <Text style={styles.header}>My Profile</Text>
 
             <Pressable style={styles.row}>
                 <Text style={styles.label}>Username</Text>
-                <Text style={styles.username}>@person</Text>
+                <Text style={styles.username}>@{myUsername}</Text>
             </Pressable>
 
             <Pressable onPress={handleLogout} style={styles.btn}>
