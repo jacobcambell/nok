@@ -172,6 +172,65 @@ app.post('/add-contact', (req: Express.Request, res: Express.Response) => {
         })
 })
 
+app.post('/get-contacts', (req: Express.Request, res: Express.Response) => {
+    const check = [
+        req.body.idToken
+    ];
+
+    if (check.includes(undefined)) {
+        res.sendStatus(400);
+        return;
+    }
+
+    firebaseAdmin
+        .auth()
+        .verifyIdToken(req.body.idToken)
+        .then((decodedToken) => {
+            const uid = decodedToken.uid;
+
+            // Get this user's id from their firebase uid
+            con.query('SELECT users.id FROM users WHERE users.firebase_uid=?', [uid], (err, results) => {
+                if (err) throw err;
+
+                if (results.length === 0) {
+                    // For some reason there is no user id matching that firebase uid
+                    res.sendStatus(400);
+                    return;
+                }
+
+                const user_id = results[0].id;
+
+                // Get all of this user's contacts, pending or not
+                con.query(`SELECT
+                            users.username,
+                            contacts.is_pending
+                            FROM users, contacts
+                            WHERE
+                            contacts.owner_id=? AND
+                            contacts.contact_id=users.id
+                            `, [user_id], (err, results) => {
+                    if (err) throw err;
+
+                    interface Contact {
+                        username: string;
+                        pending: boolean;
+                    }
+                    let contacts: Contact[] = [];
+
+                    for (let i = 0; i < results.length; i++) {
+                        contacts.push({ username: results[i].username, pending: results[i].is_pending });
+                    }
+
+                    res.json({ error: false, contacts });
+                    return;
+                });
+            });
+        })
+        .catch((error) => {
+            res.sendStatus(400);
+        })
+})
+
 app.listen(PORT, () => {
     console.log('Listening on ' + PORT)
 })
