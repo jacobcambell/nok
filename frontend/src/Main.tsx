@@ -10,7 +10,7 @@ import axios from "axios";
 import { API_ENDPOINT } from './EnvironmentVariables';
 import { AuthContext } from "./contexts/AuthContext";
 
-const Main = () => {
+const Main = ({ navigation }: { navigation: any }) => {
 
     const Tab = createBottomTabNavigator();
     const { firebaseAuth } = useContext(AuthContext);
@@ -18,8 +18,15 @@ const Main = () => {
     useEffect(() => {
         // Every time the logged in user renders this main component, we want to send
         // a ping to the server with the user object
-        firebaseAuth.currentUser.getIdToken(true)
-            .then((idToken: any) => {
+        SecureStore.getItemAsync('firebase_idToken')
+            .then((idToken) => {
+                if (idToken === null) {
+                    // User should not be on this screen without a firebase_idToken
+                    navigation.navigate('Lander');
+                    return;
+                }
+
+                // Ping the api with the user's idToken
                 axios.post(`${API_ENDPOINT}/ping`, {
                     idToken
                 })
