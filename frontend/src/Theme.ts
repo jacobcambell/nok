@@ -7,7 +7,8 @@ export const Theme = {
         mediumblue: '#2E74B7',
         lightblue: '#95D3E9',
         highlight: '#EFD602',
-        white: '#FFFFFF'
+        white: '#FFFFFF',
+        red: '#C11212'
     },
     fontSizes: {
         small: 13,
