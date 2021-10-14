@@ -99,6 +99,79 @@ app.post('/get-my-username', (req: Express.Request, res: Express.Response) => {
         })
 })
 
+app.post('/add-contact', (req: Express.Request, res: Express.Response) => {
+    const check = [
+        req.body.idToken,
+        req.body.username
+    ];
+
+    if (check.includes(undefined)) {
+        res.sendStatus(400);
+        return;
+    }
+
+    firebaseAdmin
+        .auth()
+        .verifyIdToken(req.body.idToken)
+        .then((decodedToken) => {
+            const uid = decodedToken.uid;
+
+            // Get this user's id from their firebase_uid
+            con.query(`SELECT users.id FROM users WHERE users.firebase_uid=?`, [uid], (err, results) => {
+                if (err) throw err;
+
+                if (results.length === 0) {
+                    // No user id found for this firebase_uid for some reason
+                    res.sendStatus(400);
+                    return;
+                }
+
+                const user_id = results[0].id;
+
+                // Get the contact (person they are adding)'s user id
+                con.query('SELECT users.id FROM users WHERE users.username=?', [req.body.username], (err, results) => {
+                    if (err) throw err;
+
+                    if (results.length === 0) {
+                        // No user exists with the username the client sent
+                        res.json({ error: true, message: 'No user with that username found' });
+                        return;
+                    }
+
+                    const contact_id = results[0].id;
+
+                    // User should not be able to add themselves
+                    if (user_id === contact_id) {
+                        res.json({ error: true, message: 'You cannot add yourself. Nice try' })
+                        return;
+                    }
+
+                    // Check if user already has a contact with this person's id
+                    con.query('SELECT COUNT(*) AS c FROM contacts WHERE contacts.owner_id=? AND contacts.contact_id=?', [user_id, contact_id], (err, results) => {
+                        if (err) throw err;
+
+                        if (results[0].c > 0) {
+                            // User is already contacts with the requested user
+                            res.json({ error: true, message: 'You are already contacts with ' + req.body.username + '!' });
+                            return;
+                        }
+
+                        // Not contacts yet. Add this user as owner, and the requested user as contact
+                        con.query('INSERT INTO contacts (owner_id, contact_id, is_pending) VALUES (?, ?, 1)', [user_id, contact_id], (err, results) => {
+                            if (err) throw err;
+
+                            res.json({ error: false, message: 'Added ' + req.body.username + ' to your contacts' });
+                            return;
+                        });
+                    })
+                });
+            });
+        })
+        .catch((error) => {
+            res.sendStatus(400);
+        })
+})
+
 app.listen(PORT, () => {
     console.log('Listening on ' + PORT)
 })
