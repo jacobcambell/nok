@@ -19,7 +19,11 @@ export default function AuthProvider({ children }: { children: any }) {
 
     useEffect(() => {
         firebaseAuth.onAuthStateChanged((user) => {
-            SecureStore.setItemAsync('firebase_user', JSON.stringify(user));
+            firebaseAuth.currentUser?.getIdToken()
+                .then((token) => {
+                    // Save the user's idToken to SecureStore
+                    SecureStore.setItemAsync('firebase_idToken', token);
+                })
         });
     }, []);
 
