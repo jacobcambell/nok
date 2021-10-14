@@ -1,6 +1,7 @@
-import React, { createContext } from 'react';
+import React, { createContext, useEffect } from 'react';
 import { initializeApp } from "firebase/app";
 import { getAuth } from 'firebase/auth';
+import * as SecureStore from 'expo-secure-store';
 
 const firebaseApp = initializeApp({
     apiKey: "AIzaSyAnQ4G4n0kigRIap659em1tB3HnLUiL2I8",
@@ -15,6 +16,13 @@ export const AuthContext = createContext<any>(null);
 const firebaseAuth = getAuth();
 
 export default function AuthProvider({ children }: { children: any }) {
+
+    useEffect(() => {
+        firebaseAuth.onAuthStateChanged((user) => {
+            SecureStore.setItemAsync('firebase_user', JSON.stringify(user));
+        });
+    }, []);
+
     return (
         <AuthContext.Provider value={{ firebaseAuth }}>
             {children}
