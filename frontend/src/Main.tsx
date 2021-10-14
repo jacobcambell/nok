@@ -1,22 +1,36 @@
-// This file is meant to be the main screen the user sees after they have logged in
-
 import React from "react";
-import { Text, View } from "react-native";
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-
-const Tab = createBottomTabNavigator();
+import Ionicons from '@expo/vector-icons/Ionicons';
+import { Theme } from "./Theme";
+import Chat from "./pages/Chat";
+import Contacts from "./pages/Contacts";
+import MyProfile from "./pages/MyProfile";
 
 const Main = () => {
-    return (
-        <Tab.Navigator screenOptions={{ headerShown: false }}>
-            <Tab.Screen name="Home" component={MainScreen} />
-        </Tab.Navigator>
-    );
-}
 
-const MainScreen = () => {
+    const Tab = createBottomTabNavigator();
+
     return (
-        <Text>Main component</Text>
+        <Tab.Navigator screenOptions={({ route }) => ({
+            tabBarActiveTintColor: Theme.colors.lightblue,
+            tabBarInactiveTintColor: Theme.colors.grey,
+            tabBarIcon: ({ focused, color, size }) => {
+                switch (route.name) {
+                    case 'Chat':
+                        return <Ionicons name={'chatbubble'} size={size} color={color} />;
+                    case 'Contacts':
+                        return <Ionicons name={'people'} size={size} color={color} />;
+                    case 'MyProfile':
+                        return <Ionicons name={'person-circle'} size={size} color={color} />;
+                }
+            },
+            tabBarShowLabel: false,
+            headerShown: false
+        })}>
+            <Tab.Screen name="Chat" component={Chat} />
+            <Tab.Screen name="Contacts" component={Contacts} />
+            <Tab.Screen name="MyProfile" component={MyProfile} />
+        </Tab.Navigator>
     );
 }
 
