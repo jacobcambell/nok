@@ -19,7 +19,7 @@ export default function AuthProvider({ children }: { children: any }) {
 
     useEffect(() => {
         firebaseAuth.onAuthStateChanged((user) => {
-            firebaseAuth.currentUser?.getIdToken()
+            firebaseAuth.currentUser?.getIdToken(true)
                 .then((token) => {
                     // Save the user's idToken to SecureStore
                     SecureStore.setItemAsync('firebase_idToken', token);
