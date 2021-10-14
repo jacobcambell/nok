@@ -6,6 +6,7 @@ import Login from './src/pages/Login';
 import Register from './src/pages/Register';
 import Main from './src/Main';
 import AuthProvider from './src/contexts/AuthContext';
+import AddContact from './src/pages/AddContact';
 
 const Stack = createNativeStackNavigator();
 
@@ -18,6 +19,8 @@ const App = () => {
                     <Stack.Screen name="Login" component={Login} />
                     <Stack.Screen name="Register" component={Register} />
                     <Stack.Screen name="Main" component={Main} />
+
+                    <Stack.Screen name="AddContact" component={AddContact} />
                 </Stack.Navigator>
             </NavigationContainer>
         </AuthProvider>
