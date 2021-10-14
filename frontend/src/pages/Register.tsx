@@ -26,7 +26,7 @@ const Register = ({ navigation }: { navigation: any }) => {
     }
 
     useFocusEffect(() => {
-        SecureStore.getItemAsync('firebase_user')
+        SecureStore.getItemAsync('firebase_idToken')
             .then(j => {
                 if (j !== null) {
                     // User is already logged in
