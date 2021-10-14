@@ -1,20 +1,21 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { TextInput } from 'react-native-gesture-handler';
 import Center from '../Center';
 import { Theme } from '../Theme';
-import { getAuth, signInWithEmailAndPassword } from 'firebase/auth';
 import * as SecureStore from 'expo-secure-store';
 import { useFocusEffect } from '@react-navigation/native';
+import { AuthContext } from '../contexts/AuthContext';
+import { signInWithEmailAndPassword } from '@firebase/auth';
 
 const Login = ({ navigation }: { navigation: any }) => {
 
+    const { firebaseAuth } = useContext(AuthContext);
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-    const auth = getAuth();
 
     const handleLogin = () => {
-        signInWithEmailAndPassword(auth, email, password)
+        signInWithEmailAndPassword(firebaseAuth, email, password)
             .then(() => {
                 navigation.navigate('Main');
             })
@@ -24,7 +25,7 @@ const Login = ({ navigation }: { navigation: any }) => {
     }
 
     useFocusEffect(() => {
-        SecureStore.getItemAsync('firebase_jwt')
+        SecureStore.getItemAsync('firebase_user')
             .then(j => {
                 if (j !== null) {
                     // User is already logged in
