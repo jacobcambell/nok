@@ -63,6 +63,42 @@ app.post('/ping', (req: Express.Request, res: Express.Response) => {
             res.sendStatus(400);
         });
 })
+
+app.post('/get-my-username', (req: Express.Request, res: Express.Response) => {
+    const check = [
+        req.body.idToken
+    ];
+
+    if (check.includes(undefined)) {
+        res.sendStatus(400);
+        return;
+    }
+
+    firebaseAdmin
+        .auth()
+        .verifyIdToken(req.body.idToken)
+        .then((decodedToken) => {
+            const uid = decodedToken.uid;
+
+            // Get this user's username based on their firebase uid
+            con.query('SELECT users.username FROM users WHERE users.firebase_uid=?', [uid], (err, results) => {
+                if (err) throw err;
+
+                if (results.length === 0) {
+                    // User doesn't have a username for some reason?
+                    res.sendStatus(400);
+                    return;
+                }
+
+                res.json({ error: false, username: results[0].username })
+                return;
+            });
+        })
+        .catch((error) => {
+            res.sendStatus(400);
+        })
+})
+
 app.listen(PORT, () => {
     console.log('Listening on ' + PORT)
 })
