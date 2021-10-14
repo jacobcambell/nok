@@ -1,14 +1,30 @@
-import React from "react";
+import React, { useEffect, useContext } from "react";
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { Theme } from "./Theme";
 import Chat from "./pages/Chat";
 import Contacts from "./pages/Contacts";
 import MyProfile from "./pages/MyProfile";
+import * as SecureStore from 'expo-secure-store';
+import axios from "axios";
+import { API_ENDPOINT } from './EnvironmentVariables';
+import { AuthContext } from "./contexts/AuthContext";
 
 const Main = () => {
 
     const Tab = createBottomTabNavigator();
+    const { firebaseAuth } = useContext(AuthContext);
+
+    useEffect(() => {
+        // Every time the logged in user renders this main component, we want to send
+        // a ping to the server with the user object
+        firebaseAuth.currentUser.getIdToken(true)
+            .then((idToken: any) => {
+                axios.post(`${API_ENDPOINT}/ping`, {
+                    idToken
+                })
+            })
+    }, []);
 
     return (
         <Tab.Navigator screenOptions={({ route }) => ({
