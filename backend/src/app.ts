@@ -273,6 +273,82 @@ app.post('/get-contacts', (req: Express.Request, res: Express.Response) => {
         })
 })
 
+app.post('/process-contact', (req: Express.Request, res: Express.Response) => {
+    // Params:
+    // contact_id: number - the contact the user wants to process
+    // command: string = accept, deny, or cancel depending on what the user wants to do
+
+    const check = [
+        req.body.contact_id,
+        req.body.command,
+        req.body.idToken
+    ];
+
+    if (check.includes(undefined)) {
+        res.sendStatus(400);
+        return;
+    }
+
+    // Check valid command
+    if (req.body.command !== 'accept' && req.body.command !== 'deny' && req.body.command !== 'cancel') {
+        res.sendStatus(400);
+        return;
+    }
+
+    firebaseAdmin
+        .auth()
+        .verifyIdToken(req.body.idToken)
+        .then((decodedToken) => {
+            const uid = decodedToken.uid;
+
+            // Get this user's id from their firebase uid
+            con.query('SELECT users.id FROM users WHERE users.firebase_uid=?', [uid], (err, results) => {
+                if (err) throw err;
+
+                if (results.length === 0) {
+                    // For some reason there is no user id matching that firebase uid
+                    res.sendStatus(400);
+                    return;
+                }
+
+                const user_id = results[0].id;
+
+                switch (req.body.command) {
+                    case 'accept':
+                        acceptContact(req.body.contact_id, user_id);
+                        break;
+                    case 'deny':
+                        denyContact(req.body.contact_id, user_id);
+                        break;
+                    case 'cancel':
+                        cancelContact(req.body.contact_id, user_id);
+                        break;
+                    default:
+                        res.sendStatus(400);
+                        break;
+                }
+            })
+        })
+        .catch((error) => {
+            res.sendStatus(400);
+        })
+
+    const acceptContact = (contact_id: number, user_id: number) => {
+        console.log('you tried to accept a contact')
+        res.sendStatus(200);
+    }
+
+    const denyContact = (contact_id: number, user_id: number) => {
+        console.log('you tried to deny a contact')
+        res.sendStatus(200);
+    }
+
+    const cancelContact = (contact_id: number, user_id: number) => {
+        console.log('you tried to cancel a contact')
+        res.sendStatus(200);
+    }
+})
+
 app.listen(PORT, () => {
     console.log('Listening on ' + PORT)
 })
