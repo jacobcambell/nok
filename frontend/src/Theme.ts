@@ -8,7 +8,8 @@ export const Theme = {
         lightblue: '#95D3E9',
         highlight: '#EFD602',
         white: '#FFFFFF',
-        red: '#C11212'
+        red: '#C11212',
+        success: '#4BB543'
     },
     fontSizes: {
         small: 13,
