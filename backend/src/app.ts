@@ -409,12 +409,17 @@ app.post('/get-message-threads', (req: Express.Request, res: Express.Response) =
 
                     let message_threads: MessageThread[] = [];
 
-                    for (let i = 0; i < results.length; i++) {
+                    // Loop through all the message threads we got from the database and add them to the array along with the msg_preview
+                    let i = 0;
+                    let size = results.length;
+
+                    messageLoop();
+                    function messageLoop() {
                         let thread_id = results[i].id;
                         let username = results[i].username;
 
                         // For each message thread, we want to load the last message from that thread
-                        con.query('SELECT messages.message FROM messages, message_threads WHERE messages.thread_id=message_threads.id ORDER BY messages.send_time DESC LIMIT 1', (err, results) => {
+                        con.query('SELECT messages.message FROM messages, message_threads WHERE messages.thread_id=message_threads.id AND message_threads.id=? ORDER BY messages.send_time DESC LIMIT 1', [thread_id], (err, results) => {
                             if (err) throw err;
 
                             let last_message = '';
@@ -429,7 +434,13 @@ app.post('/get-message-threads', (req: Express.Request, res: Express.Response) =
                             }
 
                             message_threads.push({ id: thread_id, username: username, msg_preview: last_message });
-                            res.json(message_threads)
+
+                            i++;
+                            if (i < size) {
+                                messageLoop();
+                            } else {
+                                res.json(message_threads);
+                            }
                         });
                     }
                 });
