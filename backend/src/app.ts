@@ -327,6 +327,9 @@ app.post('/process-contact', (req: Express.Request, res: Express.Response) => {
                         res.sendStatus(400);
                         break;
                 }
+
+                res.sendStatus(200);
+                return;
             })
         })
         .catch((error) => {
@@ -334,18 +337,21 @@ app.post('/process-contact', (req: Express.Request, res: Express.Response) => {
         })
 
     const acceptContact = (contact_id: number, user_id: number) => {
-        console.log('you tried to accept a contact')
-        res.sendStatus(200);
+        con.query('UPDATE contacts SET is_pending=0 WHERE contact_id=? AND owner_id=? AND is_pending=1', [user_id, contact_id], (err, results) => {
+            if (err) throw err;
+        });
     }
 
     const denyContact = (contact_id: number, user_id: number) => {
-        console.log('you tried to deny a contact')
-        res.sendStatus(200);
+        con.query('DELETE FROM contacts WHERE contact_id=? AND owner_id=? AND is_pending=1', [user_id, contact_id], (err, results) => {
+            if (err) throw err;
+        });
     }
 
     const cancelContact = (contact_id: number, user_id: number) => {
-        console.log('you tried to cancel a contact')
-        res.sendStatus(200);
+        con.query('DELETE FROM contacts WHERE contact_id=? AND owner_id=? AND is_pending=1', [contact_id, user_id], (err, results) => {
+            if (err) throw err;
+        });
     }
 })
 
