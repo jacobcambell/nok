@@ -31,9 +31,8 @@ export default function Chat() {
                 })
                     .then((res) => {
                         setMessageThreads(res.data);
-                        console.log(res.data)
                     })
-                    .catch((err) => console.log(err))
+                    .catch((err) => { })
             })
     }
 

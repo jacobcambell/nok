@@ -46,7 +46,7 @@ export default function Contacts({ navigation }: { navigation: any }) {
                     .then(() => {
                         loadContacts();
                     })
-                    .catch((err) => console.log(err))
+                    .catch((err) => { })
             })
     }
 
