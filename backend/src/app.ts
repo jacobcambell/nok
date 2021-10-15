@@ -53,7 +53,6 @@ app.post('/ping', (req: Express.Request, res: Express.Response) => {
                 }
                 else {
                     // This uid already exists in our users table
-                    console.log('This person already exists')
                 }
 
                 res.sendStatus(200);
