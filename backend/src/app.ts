@@ -339,6 +339,11 @@ app.post('/process-contact', (req: Express.Request, res: Express.Response) => {
     const acceptContact = (contact_id: number, user_id: number) => {
         con.query('UPDATE contacts SET is_pending=0 WHERE contact_id=? AND owner_id=? AND is_pending=1', [user_id, contact_id], (err, results) => {
             if (err) throw err;
+
+            // Create a message thread for these two users
+            con.query('INSERT INTO message_threads (user1, user2) VALUES (?, ?)', [contact_id, user_id], (err, results) => {
+                if (err) throw err;
+            });
         });
     }
 
@@ -353,6 +358,65 @@ app.post('/process-contact', (req: Express.Request, res: Express.Response) => {
             if (err) throw err;
         });
     }
+})
+
+app.post('/get-message-threads', (req: Express.Request, res: Express.Response) => {
+    const check = [
+        req.body.idToken
+    ];
+
+    if (check.includes(undefined)) {
+        res.sendStatus(400);
+        return;
+    }
+
+    firebaseAdmin
+        .auth()
+        .verifyIdToken(req.body.idToken)
+        .then((decodedToken) => {
+            const uid = decodedToken.uid;
+
+            // Get this user's id from their firebase uid
+            con.query('SELECT users.id FROM users WHERE users.firebase_uid=?', [uid], (err, results) => {
+                if (err) throw err;
+
+                if (results.length === 0) {
+                    // For some reason there is no user id matching that firebase uid
+                    res.sendStatus(400);
+                    return;
+                }
+
+                const user_id = results[0].id;
+
+                // Load all the message threads this user is a member of
+                con.query(`SELECT
+                            message_threads.id,
+                            users.username
+                            FROM
+                            message_threads, users
+                            WHERE
+                            (message_threads.user1 = ? OR message_threads.user2 = ?) AND
+                            (message_threads.user1 = users.id OR message_threads.user2 = users.id) AND
+                            users.id!=?
+                `, [user_id, user_id, user_id], (err, results) => {
+                    if (err) throw err;
+
+                    interface MessageThread {
+                        id: number;
+                        username: string;
+                    }
+
+                    let message_threads: MessageThread[] = [];
+
+                    for (let i = 0; i < results.length; i++) {
+                        message_threads.push({ id: results[0].id, username: results[0].username });
+                    }
+
+                    res.json(message_threads)
+                });
+            })
+        });
+
 })
 
 app.listen(PORT, () => {
