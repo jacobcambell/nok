@@ -422,7 +422,7 @@ app.post('/get-message-threads', (req: Express.Request, res: Express.Response) =
                         con.query('SELECT messages.message FROM messages, message_threads WHERE messages.thread_id=message_threads.id AND message_threads.id=? ORDER BY messages.send_time DESC LIMIT 1', [thread_id], (err, results) => {
                             if (err) throw err;
 
-                            let last_message = '';
+                            let last_message = '(No messages)';
 
                             if (results.length !== 0) {
                                 if (results[0].message.length > 40) {
