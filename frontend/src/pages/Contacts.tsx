@@ -19,10 +19,6 @@ interface allContacts {
 
 export default function Contacts({ navigation }: { navigation: any }) {
 
-    const handleAdd = () => {
-        navigation.navigate('AddContact');
-    }
-
     const [contacts, setContacts] = useState<allContacts>({
         active_contacts: [],
         outgoing_contacts: [],
@@ -35,6 +31,22 @@ export default function Contacts({ navigation }: { navigation: any }) {
         }, [])
     );
 
+    const handleAdd = () => {
+        navigation.navigate('AddContact');
+    }
+
+    const processContact = (contact_id: number, command: string) => {
+        SecureStore.getItemAsync('firebase_idToken')
+            .then((idToken) => {
+                axios.post<any>(`${API_ENDPOINT}/process-contact`, {
+                    contact_id,
+                    command,
+                    idToken
+                })
+                    .catch((err) => console.log(err))
+            })
+    }
+
     const loadContacts = () => {
         SecureStore.getItemAsync('firebase_idToken')
             .then((idToken) => {
@@ -43,7 +55,6 @@ export default function Contacts({ navigation }: { navigation: any }) {
                 })
                     .then((results) => {
                         setContacts(results.data);
-                        console.log(results.data)
                     })
                     .catch((err) => {
                         alert(err);
@@ -70,10 +81,10 @@ export default function Contacts({ navigation }: { navigation: any }) {
                     <Pressable style={styles.contact} key={contact.id}>
                         <Text style={styles.contactName}>{contact.username}</Text>
                         <View style={styles.btnContainer}>
-                            <Pressable style={styles.btnAccept}>
+                            <Pressable style={styles.btnAccept} onPress={() => { processContact(contact.id, 'accept') }}>
                                 <Text style={styles.btnText}>Accept</Text>
                             </Pressable>
-                            <Pressable style={styles.btnDeny}>
+                            <Pressable style={styles.btnDeny} onPress={() => { processContact(contact.id, 'deny') }}>
                                 <Text style={styles.btnText}>Deny</Text>
                             </Pressable>
                         </View>
@@ -92,7 +103,7 @@ export default function Contacts({ navigation }: { navigation: any }) {
                     <Pressable style={styles.contact} key={contact.id}>
                         <Text style={styles.contactName}>{contact.username}</Text>
                         <View style={styles.btnContainer}>
-                            <Pressable style={styles.btnCancel}>
+                            <Pressable style={styles.btnCancel} onPress={() => { processContact(contact.id, 'cancel') }}>
                                 <Text style={styles.btnText}>Cancel</Text>
                             </Pressable>
                         </View>
