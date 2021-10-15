@@ -43,6 +43,9 @@ export default function Contacts({ navigation }: { navigation: any }) {
                     command,
                     idToken
                 })
+                    .then(() => {
+                        loadContacts();
+                    })
                     .catch((err) => console.log(err))
             })
     }
