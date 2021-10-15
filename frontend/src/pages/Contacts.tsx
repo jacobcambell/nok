@@ -8,6 +8,7 @@ import { useFocusEffect } from '@react-navigation/core';
 import axios from 'axios';
 
 interface Contact {
+    id: number;
     username: string;
 }
 interface allContacts {
@@ -66,7 +67,7 @@ export default function Contacts({ navigation }: { navigation: any }) {
             {
                 contacts.incoming_contacts.length > 0 &&
                 contacts.incoming_contacts.map((contact) => (
-                    <Pressable style={styles.contact} key={Date.now() + contact.username}>
+                    <Pressable style={styles.contact} key={contact.id}>
                         <Text style={styles.contactName}>{contact.username}</Text>
                         <View style={styles.btnContainer}>
                             <Pressable style={styles.btnAccept}>
@@ -88,7 +89,7 @@ export default function Contacts({ navigation }: { navigation: any }) {
             {
                 contacts.outgoing_contacts.length > 0 &&
                 contacts.outgoing_contacts.map((contact) => (
-                    <Pressable style={styles.contact} key={Date.now() + contact.username}>
+                    <Pressable style={styles.contact} key={contact.id}>
                         <Text style={styles.contactName}>{contact.username}</Text>
                         <View style={styles.btnContainer}>
                             <Pressable style={styles.btnCancel}>
@@ -107,7 +108,7 @@ export default function Contacts({ navigation }: { navigation: any }) {
             {
                 contacts.active_contacts.length > 0 &&
                 contacts.active_contacts.map((contact) => (
-                    <Pressable style={styles.contact} key={Date.now() + contact.username}>
+                    <Pressable style={styles.contact} key={contact.id}>
                         <Text style={styles.contactName}>{contact.username}</Text>
                     </Pressable>
                 ))
