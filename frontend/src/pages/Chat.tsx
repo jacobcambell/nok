@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { useFocusEffect } from '@react-navigation/core'
-import { Text, StyleSheet } from 'react-native'
+import { Text, StyleSheet, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { Theme } from '../Theme'
 import { API_ENDPOINT } from '../EnvironmentVariables'
@@ -10,6 +10,7 @@ import axios from 'axios';
 interface MessageThread {
     id: number;
     username: string;
+    msg_preview: string;
 }
 
 export default function Chat() {
@@ -30,6 +31,7 @@ export default function Chat() {
                 })
                     .then((res) => {
                         setMessageThreads(res.data);
+                        console.log(res.data)
                     })
                     .catch((err) => console.log(err))
             })
@@ -37,7 +39,17 @@ export default function Chat() {
 
     return (
         <SafeAreaView style={styles.content}>
-            <Text style={Theme.header}>Chat</Text>
+            <Text style={[Theme.header, { padding: 15 }]}>Chat</Text>
+
+            {
+                messageThreads.length > 0 &&
+                messageThreads.map((thread) => (
+                    <View style={styles.thread} key={thread.id}>
+                        <Text style={styles.threadUser}>{thread.username}</Text>
+                        <Text style={styles.threadMsg}>{thread.msg_preview}</Text>
+                    </View>
+                ))
+            }
         </SafeAreaView>
     )
 }
@@ -45,7 +57,21 @@ export default function Chat() {
 const styles = StyleSheet.create({
     content: {
         flex: 1,
-        backgroundColor: Theme.colors.white,
-        padding: 15
+        backgroundColor: Theme.colors.white
+    },
+    thread: {
+        borderTopWidth: 0.25,
+        borderBottomWidth: 0.25,
+        borderTopColor: Theme.colors.lightgrey,
+        borderBottomColor: Theme.colors.lightgrey,
+        paddingVertical: 5,
+        paddingHorizontal: 15
+    },
+    threadUser: {
+        fontWeight: 'bold',
+        paddingBottom: 5
+    },
+    threadMsg: {
+        color: Theme.colors.grey
     }
 });
