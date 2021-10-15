@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Text, StyleSheet, Pressable } from 'react-native';
+import { Text, StyleSheet, Pressable, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Theme } from '../Theme';
 import * as SecureStore from 'expo-secure-store';
@@ -68,6 +68,14 @@ export default function Contacts({ navigation }: { navigation: any }) {
                 contacts.incoming_contacts.map((contact) => (
                     <Pressable style={styles.contact} key={Date.now() + contact.username}>
                         <Text style={styles.contactName}>{contact.username}</Text>
+                        <View style={styles.btnContainer}>
+                            <Pressable style={styles.btnAccept}>
+                                <Text style={styles.btnText}>Accept</Text>
+                            </Pressable>
+                            <Pressable style={styles.btnDeny}>
+                                <Text style={styles.btnText}>Deny</Text>
+                            </Pressable>
+                        </View>
                     </Pressable>
                 ))
             }
@@ -82,6 +90,11 @@ export default function Contacts({ navigation }: { navigation: any }) {
                 contacts.outgoing_contacts.map((contact) => (
                     <Pressable style={styles.contact} key={Date.now() + contact.username}>
                         <Text style={styles.contactName}>{contact.username}</Text>
+                        <View style={styles.btnContainer}>
+                            <Pressable style={styles.btnCancel}>
+                                <Text style={styles.btnText}>Cancel</Text>
+                            </Pressable>
+                        </View>
                     </Pressable>
                 ))
             }
@@ -124,16 +137,44 @@ const styles = StyleSheet.create({
         textAlign: 'center'
     },
     label: {
-        fontWeight: 'bold'
+        fontWeight: 'bold',
+        marginBottom: 5,
+        marginTop: 10
     },
     contact: {
         borderTopWidth: 0.25,
         borderBottomWidth: 0.25,
         paddingVertical: 10,
         borderTopColor: Theme.colors.lightgrey,
-        borderBottomColor: Theme.colors.lightgrey
+        borderBottomColor: Theme.colors.lightgrey,
+        flexWrap: 'wrap',
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between'
     },
     contactName: {
         fontSize: Theme.fontSizes.normal
+    },
+    btnContainer: {
+        flexDirection: 'row'
+    },
+    btnAccept: {
+        backgroundColor: Theme.colors.success,
+        borderRadius: 25,
+        paddingVertical: 5,
+        paddingHorizontal: 15,
+        marginRight: 10
+    },
+    btnDeny: {
+        backgroundColor: Theme.colors.red,
+        borderRadius: 25,
+        paddingVertical: 5,
+        paddingHorizontal: 15
+    },
+    btnCancel: {
+        backgroundColor: Theme.colors.grey,
+        borderRadius: 25,
+        paddingVertical: 5,
+        paddingHorizontal: 15
     }
 });
