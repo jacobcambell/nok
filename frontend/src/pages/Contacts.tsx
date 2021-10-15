@@ -9,11 +9,11 @@ import axios from 'axios';
 
 interface Contact {
     username: string;
-    pending: boolean;
 }
-interface getContactsResponse {
-    error: boolean;
-    contacts: Contact[];
+interface allContacts {
+    active_contacts: Contact[];
+    outgoing_contacts: Contact[];
+    incoming_contacts: Contact[];
 }
 
 export default function Contacts({ navigation }: { navigation: any }) {
@@ -22,7 +22,11 @@ export default function Contacts({ navigation }: { navigation: any }) {
         navigation.navigate('AddContact');
     }
 
-    const [contacts, setContacts] = useState<Contact[] | null>(null);
+    const [contacts, setContacts] = useState<allContacts>({
+        active_contacts: [],
+        outgoing_contacts: [],
+        incoming_contacts: []
+    });
 
     useFocusEffect(
         React.useCallback(() => {
@@ -33,14 +37,15 @@ export default function Contacts({ navigation }: { navigation: any }) {
     const loadContacts = () => {
         SecureStore.getItemAsync('firebase_idToken')
             .then((idToken) => {
-                axios.post<getContactsResponse>(`${API_ENDPOINT}/get-contacts`, {
+                axios.post<allContacts>(`${API_ENDPOINT}/get-contacts`, {
                     idToken
                 })
                     .then((results) => {
-                        setContacts(results.data.contacts);
+                        setContacts(results.data);
+                        console.log(results.data)
                     })
                     .catch((err) => {
-                        alert('Could not load contacts');
+                        alert(err);
                     })
             })
     }
@@ -54,9 +59,42 @@ export default function Contacts({ navigation }: { navigation: any }) {
             </Pressable>
 
             {
-                contacts !== null &&
-                contacts.map((contact) => (
-                    <Pressable style={styles.contact}>
+                // Incoming Contact Requests
+                contacts.incoming_contacts.length > 0 &&
+                <Text style={styles.label}>Incoming Requests {contacts.incoming_contacts.length}</Text>
+            }
+            {
+                contacts.incoming_contacts.length > 0 &&
+                contacts.incoming_contacts.map((contact) => (
+                    <Pressable style={styles.contact} key={Date.now() + contact.username}>
+                        <Text style={styles.contactName}>{contact.username}</Text>
+                    </Pressable>
+                ))
+            }
+
+            {
+                // Outgoing Contact Requests
+                contacts.outgoing_contacts.length > 0 &&
+                <Text style={styles.label}>Outgoing Requests {contacts.outgoing_contacts.length}</Text>
+            }
+            {
+                contacts.outgoing_contacts.length > 0 &&
+                contacts.outgoing_contacts.map((contact) => (
+                    <Pressable style={styles.contact} key={Date.now() + contact.username}>
+                        <Text style={styles.contactName}>{contact.username}</Text>
+                    </Pressable>
+                ))
+            }
+
+            {
+                // All Non-Pending Contact Requests
+                contacts.active_contacts.length > 0 &&
+                <Text style={styles.label}>Active Contacts {contacts.active_contacts.length}</Text>
+            }
+            {
+                contacts.active_contacts.length > 0 &&
+                contacts.active_contacts.map((contact) => (
+                    <Pressable style={styles.contact} key={Date.now() + contact.username}>
                         <Text style={styles.contactName}>{contact.username}</Text>
                     </Pressable>
                 ))
@@ -84,6 +122,9 @@ const styles = StyleSheet.create({
     btnText: {
         color: Theme.colors.white,
         textAlign: 'center'
+    },
+    label: {
+        fontWeight: 'bold'
     },
     contact: {
         borderTopWidth: 0.25,
