@@ -43,8 +43,8 @@ export default function Chat() {
 
             {
                 messageThreads.length > 0 &&
-                messageThreads.map((thread) => (
-                    <View style={styles.thread} key={thread.id}>
+                messageThreads.map((thread, index) => (
+                    <View style={[index === messageThreads.length - 1 ? { borderBottomWidth: 0.5 } : { borderBottomWidth: 0 }, styles.thread]} key={thread.id}>
                         <Text style={styles.threadUser}>{thread.username}</Text>
                         <Text style={styles.threadMsg}>{thread.msg_preview}</Text>
                     </View>
@@ -60,8 +60,7 @@ const styles = StyleSheet.create({
         backgroundColor: Theme.colors.white
     },
     thread: {
-        borderTopWidth: 0.25,
-        borderBottomWidth: 0.25,
+        borderTopWidth: 0.5,
         borderTopColor: Theme.colors.lightgrey,
         borderBottomColor: Theme.colors.lightgrey,
         paddingVertical: 5,
