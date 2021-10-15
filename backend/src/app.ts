@@ -199,29 +199,67 @@ app.post('/get-contacts', (req: Express.Request, res: Express.Response) => {
 
                 const user_id = results[0].id;
 
-                // Get all of this user's contacts, pending or not
+                interface Contact {
+                    username: string;
+                }
+
+                let active_contacts: Contact[] = [];
+                let outgoing_contacts: Contact[] = [];
+                let incoming_contacts: Contact[] = [];
+
+                // Get all non-pending contacts for this user
                 con.query(`SELECT
-                            users.username,
-                            contacts.is_pending
+                            users.username
                             FROM users, contacts
                             WHERE
                             contacts.owner_id=? AND
+                            contacts.is_pending=0 AND
                             contacts.contact_id=users.id
-                            `, [user_id], (err, results) => {
+                `, [user_id], (err, results) => {
                     if (err) throw err;
 
-                    interface Contact {
-                        username: string;
-                        pending: boolean;
-                    }
-                    let contacts: Contact[] = [];
-
                     for (let i = 0; i < results.length; i++) {
-                        contacts.push({ username: results[i].username, pending: results[i].is_pending });
+                        active_contacts.push({ username: results[i].username });
                     }
 
-                    res.json({ error: false, contacts });
-                    return;
+                    // Get all outgoing, pending contact requests
+                    con.query(`SELECT
+                                users.username
+                                FROM users, contacts
+                                WHERE
+                                contacts.owner_id=? AND
+                                contacts.is_pending=1 AND
+                                contacts.contact_id=users.id`, [user_id], (err, results) => {
+                        if (err) throw err;
+
+                        for (let i = 0; i < results.length; i++) {
+                            outgoing_contacts.push({ username: results[i].username });
+                        }
+
+                        // Get all incoming, pending contact requests
+                        con.query(`SELECT
+                                    users.username
+                                    FROM users, contacts
+                                    WHERE
+                                    contacts.contact_id=? AND
+                                    contacts.is_pending=1 AND
+                                    contacts.owner_id=users.id`, [user_id], (err, results) => {
+                            if (err) throw err;
+
+                            for (let i = 0; i < results.length; i++) {
+                                incoming_contacts.push({ username: results[i].username });
+                            }
+
+                            // Build and send response to client
+                            let response = {
+                                active_contacts,
+                                outgoing_contacts,
+                                incoming_contacts
+                            }
+
+                            res.json(response);
+                        });
+                    });
                 });
             });
         })
