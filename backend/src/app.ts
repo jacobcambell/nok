@@ -409,7 +409,7 @@ app.post('/get-message-threads', (req: Express.Request, res: Express.Response) =
                     let message_threads: MessageThread[] = [];
 
                     for (let i = 0; i < results.length; i++) {
-                        message_threads.push({ id: results[0].id, username: results[0].username });
+                        message_threads.push({ id: results[i].id, username: results[i].username });
                     }
 
                     res.json(message_threads)
