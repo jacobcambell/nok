@@ -212,10 +212,11 @@ app.post('/get-contacts', (req: Express.Request, res: Express.Response) => {
                             users.username
                             FROM users, contacts
                             WHERE
-                            contacts.owner_id=? AND
+                            (contacts.owner_id=? OR contacts.contact_id=?) AND
                             contacts.is_pending=0 AND
-                            contacts.contact_id=users.id
-                `, [user_id], (err, results) => {
+                            (contacts.contact_id=users.id OR contacts.owner_id=users.id) AND
+                            users.id!=?
+                `, [user_id, user_id, user_id], (err, results) => {
                     if (err) throw err;
 
                     for (let i = 0; i < results.length; i++) {
