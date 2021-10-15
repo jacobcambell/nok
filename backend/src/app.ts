@@ -404,15 +404,34 @@ app.post('/get-message-threads', (req: Express.Request, res: Express.Response) =
                     interface MessageThread {
                         id: number;
                         username: string;
+                        msg_preview: string;
                     }
 
                     let message_threads: MessageThread[] = [];
 
                     for (let i = 0; i < results.length; i++) {
-                        message_threads.push({ id: results[i].id, username: results[i].username });
-                    }
+                        let thread_id = results[i].id;
+                        let username = results[i].username;
 
-                    res.json(message_threads)
+                        // For each message thread, we want to load the last message from that thread
+                        con.query('SELECT messages.message FROM messages, message_threads WHERE messages.thread_id=message_threads.id ORDER BY messages.send_time DESC LIMIT 1', (err, results) => {
+                            if (err) throw err;
+
+                            let last_message = '';
+
+                            if (results.length !== 0) {
+                                if (results[0].message.length > 40) {
+                                    last_message = results[0].message.substring(0, 40) + '...';
+                                }
+                                else {
+                                    last_message = results[0].message;
+                                }
+                            }
+
+                            message_threads.push({ id: thread_id, username: username, msg_preview: last_message });
+                            res.json(message_threads)
+                        });
+                    }
                 });
             })
         });
