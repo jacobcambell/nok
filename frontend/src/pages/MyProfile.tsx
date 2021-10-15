@@ -54,7 +54,7 @@ export default function MyProfile({ navigation }: { navigation: any }) {
 
     return (
         <SafeAreaView style={styles.content}>
-            <Text style={styles.header}>My Profile</Text>
+            <Text style={Theme.header}>My Profile</Text>
 
             <Pressable style={styles.row}>
                 <Text style={styles.label}>Username</Text>
@@ -73,10 +73,6 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: Theme.colors.white,
         padding: 15
-    },
-    header: {
-        fontSize: Theme.fontSizes.medium,
-        paddingBottom: 25
     },
     row: {
         borderTopWidth: 0.5,

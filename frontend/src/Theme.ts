@@ -1,3 +1,10 @@
+const fontSizes = {
+    small: 13,
+    normal: 16,
+    medium: 22,
+    large: 28
+}
+
 export const Theme = {
     colors: {
         black: '#000000',
@@ -8,13 +15,14 @@ export const Theme = {
         lightblue: '#95D3E9',
         highlight: '#EFD602',
         white: '#FFFFFF',
-        red: '#C11212'
+        red: '#C11212',
+        success: '#4BB543'
     },
-    fontSizes: {
-        small: 13,
-        normal: 16,
-        medium: 22,
-        large: 28
-    },
-    borderRadius: 5
+    fontSizes,
+    borderRadius: 5,
+    header: {
+        fontSize: fontSizes.medium,
+        paddingBottom: 10,
+        color: 'black'
+    }
 }

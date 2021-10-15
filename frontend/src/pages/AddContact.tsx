@@ -31,7 +31,7 @@ export default function AddContact({ navigation }: { navigation: any }) {
                         }
                     })
                     .catch((err) => {
-                        console.log(err)
+
                     })
             })
     }

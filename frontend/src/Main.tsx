@@ -33,16 +33,16 @@ const Main = ({ navigation }: { navigation: any }) => {
 
     return (
         <Tab.Navigator screenOptions={({ route }) => ({
-            tabBarActiveTintColor: Theme.colors.lightblue,
+            tabBarActiveTintColor: Theme.colors.mediumblue,
             tabBarInactiveTintColor: Theme.colors.grey,
             tabBarIcon: ({ focused, color, size }) => {
                 switch (route.name) {
                     case 'Chat':
-                        return <Ionicons name={'chatbubble'} size={size} color={color} />;
+                        return <Ionicons name={focused ? 'chatbubble' : 'chatbubble-outline'} size={size} color={color} />;
                     case 'Contacts':
-                        return <Ionicons name={'people'} size={size} color={color} />;
+                        return <Ionicons name={focused ? 'people' : 'people-outline'} size={size} color={color} />;
                     case 'MyProfile':
-                        return <Ionicons name={'person-circle'} size={size} color={color} />;
+                        return <Ionicons name={focused ? 'person-circle' : 'person-circle-outline'} size={size} color={color} />;
                 }
             },
             tabBarShowLabel: false,

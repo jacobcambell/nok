@@ -53,7 +53,6 @@ app.post('/ping', (req: Express.Request, res: Express.Response) => {
                 }
                 else {
                     // This uid already exists in our users table
-                    console.log('This person already exists')
                 }
 
                 res.sendStatus(200);
@@ -200,35 +199,254 @@ app.post('/get-contacts', (req: Express.Request, res: Express.Response) => {
 
                 const user_id = results[0].id;
 
-                // Get all of this user's contacts, pending or not
+                interface Contact {
+                    id: number;
+                    username: string;
+                }
+
+                let active_contacts: Contact[] = [];
+                let outgoing_contacts: Contact[] = [];
+                let incoming_contacts: Contact[] = [];
+
+                // Get all non-pending contacts for this user
                 con.query(`SELECT
-                            users.username,
-                            contacts.is_pending
+                            users.id,
+                            users.username
                             FROM users, contacts
                             WHERE
-                            contacts.owner_id=? AND
-                            contacts.contact_id=users.id
-                            `, [user_id], (err, results) => {
+                            (contacts.owner_id=? OR contacts.contact_id=?) AND
+                            contacts.is_pending=0 AND
+                            (contacts.contact_id=users.id OR contacts.owner_id=users.id) AND
+                            users.id!=?
+                `, [user_id, user_id, user_id], (err, results) => {
                     if (err) throw err;
 
-                    interface Contact {
-                        username: string;
-                        pending: boolean;
-                    }
-                    let contacts: Contact[] = [];
-
                     for (let i = 0; i < results.length; i++) {
-                        contacts.push({ username: results[i].username, pending: results[i].is_pending });
+                        active_contacts.push({ id: results[i].id, username: results[i].username });
                     }
 
-                    res.json({ error: false, contacts });
-                    return;
+                    // Get all outgoing, pending contact requests
+                    con.query(`SELECT
+                                users.id,
+                                users.username
+                                FROM users, contacts
+                                WHERE
+                                contacts.owner_id=? AND
+                                contacts.is_pending=1 AND
+                                contacts.contact_id=users.id`, [user_id], (err, results) => {
+                        if (err) throw err;
+
+                        for (let i = 0; i < results.length; i++) {
+                            outgoing_contacts.push({ id: results[i].id, username: results[i].username });
+                        }
+
+                        // Get all incoming, pending contact requests
+                        con.query(`SELECT
+                                    users.id,
+                                    users.username
+                                    FROM users, contacts
+                                    WHERE
+                                    contacts.contact_id=? AND
+                                    contacts.is_pending=1 AND
+                                    contacts.owner_id=users.id`, [user_id], (err, results) => {
+                            if (err) throw err;
+
+                            for (let i = 0; i < results.length; i++) {
+                                incoming_contacts.push({ id: results[i].id, username: results[i].username });
+                            }
+
+                            // Build and send response to client
+                            let response = {
+                                active_contacts,
+                                outgoing_contacts,
+                                incoming_contacts
+                            }
+
+                            res.json(response);
+                        });
+                    });
                 });
             });
         })
         .catch((error) => {
             res.sendStatus(400);
         })
+})
+
+app.post('/process-contact', (req: Express.Request, res: Express.Response) => {
+    // Params:
+    // contact_id: number - the contact the user wants to process
+    // command: string = accept, deny, or cancel depending on what the user wants to do
+
+    const check = [
+        req.body.contact_id,
+        req.body.command,
+        req.body.idToken
+    ];
+
+    if (check.includes(undefined)) {
+        res.sendStatus(400);
+        return;
+    }
+
+    // Check valid command
+    if (req.body.command !== 'accept' && req.body.command !== 'deny' && req.body.command !== 'cancel') {
+        res.sendStatus(400);
+        return;
+    }
+
+    firebaseAdmin
+        .auth()
+        .verifyIdToken(req.body.idToken)
+        .then((decodedToken) => {
+            const uid = decodedToken.uid;
+
+            // Get this user's id from their firebase uid
+            con.query('SELECT users.id FROM users WHERE users.firebase_uid=?', [uid], (err, results) => {
+                if (err) throw err;
+
+                if (results.length === 0) {
+                    // For some reason there is no user id matching that firebase uid
+                    res.sendStatus(400);
+                    return;
+                }
+
+                const user_id = results[0].id;
+
+                switch (req.body.command) {
+                    case 'accept':
+                        acceptContact(req.body.contact_id, user_id);
+                        break;
+                    case 'deny':
+                        denyContact(req.body.contact_id, user_id);
+                        break;
+                    case 'cancel':
+                        cancelContact(req.body.contact_id, user_id);
+                        break;
+                    default:
+                        res.sendStatus(400);
+                        break;
+                }
+
+                res.sendStatus(200);
+                return;
+            })
+        })
+        .catch((error) => {
+            res.sendStatus(400);
+        })
+
+    const acceptContact = (contact_id: number, user_id: number) => {
+        con.query('UPDATE contacts SET is_pending=0 WHERE contact_id=? AND owner_id=? AND is_pending=1', [user_id, contact_id], (err, results) => {
+            if (err) throw err;
+
+            // Create a message thread for these two users
+            con.query('INSERT INTO message_threads (user1, user2) VALUES (?, ?)', [contact_id, user_id], (err, results) => {
+                if (err) throw err;
+            });
+        });
+    }
+
+    const denyContact = (contact_id: number, user_id: number) => {
+        con.query('DELETE FROM contacts WHERE contact_id=? AND owner_id=? AND is_pending=1', [user_id, contact_id], (err, results) => {
+            if (err) throw err;
+        });
+    }
+
+    const cancelContact = (contact_id: number, user_id: number) => {
+        con.query('DELETE FROM contacts WHERE contact_id=? AND owner_id=? AND is_pending=1', [contact_id, user_id], (err, results) => {
+            if (err) throw err;
+        });
+    }
+})
+
+app.post('/get-message-threads', (req: Express.Request, res: Express.Response) => {
+    const check = [
+        req.body.idToken
+    ];
+
+    if (check.includes(undefined)) {
+        res.sendStatus(400);
+        return;
+    }
+
+    firebaseAdmin
+        .auth()
+        .verifyIdToken(req.body.idToken)
+        .then((decodedToken) => {
+            const uid = decodedToken.uid;
+
+            // Get this user's id from their firebase uid
+            con.query('SELECT users.id FROM users WHERE users.firebase_uid=?', [uid], (err, results) => {
+                if (err) throw err;
+
+                if (results.length === 0) {
+                    // For some reason there is no user id matching that firebase uid
+                    res.sendStatus(400);
+                    return;
+                }
+
+                const user_id = results[0].id;
+
+                // Load all the message threads this user is a member of
+                con.query(`SELECT
+                            message_threads.id,
+                            users.username
+                            FROM
+                            message_threads, users
+                            WHERE
+                            (message_threads.user1 = ? OR message_threads.user2 = ?) AND
+                            (message_threads.user1 = users.id OR message_threads.user2 = users.id) AND
+                            users.id!=?
+                `, [user_id, user_id, user_id], (err, results) => {
+                    if (err) throw err;
+
+                    interface MessageThread {
+                        id: number;
+                        username: string;
+                        msg_preview: string;
+                    }
+
+                    let message_threads: MessageThread[] = [];
+
+                    // Loop through all the message threads we got from the database and add them to the array along with the msg_preview
+                    let i = 0;
+                    let size = results.length;
+
+                    messageLoop();
+                    function messageLoop() {
+                        let thread_id = results[i].id;
+                        let username = results[i].username;
+
+                        // For each message thread, we want to load the last message from that thread
+                        con.query('SELECT messages.message FROM messages, message_threads WHERE messages.thread_id=message_threads.id AND message_threads.id=? ORDER BY messages.send_time DESC LIMIT 1', [thread_id], (err, results) => {
+                            if (err) throw err;
+
+                            let last_message = '(No messages)';
+
+                            if (results.length !== 0) {
+                                if (results[0].message.length > 40) {
+                                    last_message = results[0].message.substring(0, 40) + '...';
+                                }
+                                else {
+                                    last_message = results[0].message;
+                                }
+                            }
+
+                            message_threads.push({ id: thread_id, username: username, msg_preview: last_message });
+
+                            i++;
+                            if (i < size) {
+                                messageLoop();
+                            } else {
+                                res.json(message_threads);
+                            }
+                        });
+                    }
+                });
+            })
+        });
+
 })
 
 app.listen(PORT, () => {
