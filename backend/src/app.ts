@@ -200,6 +200,7 @@ app.post('/get-contacts', (req: Express.Request, res: Express.Response) => {
                 const user_id = results[0].id;
 
                 interface Contact {
+                    id: number;
                     username: string;
                 }
 
@@ -209,6 +210,7 @@ app.post('/get-contacts', (req: Express.Request, res: Express.Response) => {
 
                 // Get all non-pending contacts for this user
                 con.query(`SELECT
+                            users.id,
                             users.username
                             FROM users, contacts
                             WHERE
@@ -220,11 +222,12 @@ app.post('/get-contacts', (req: Express.Request, res: Express.Response) => {
                     if (err) throw err;
 
                     for (let i = 0; i < results.length; i++) {
-                        active_contacts.push({ username: results[i].username });
+                        active_contacts.push({ id: results[i].id, username: results[i].username });
                     }
 
                     // Get all outgoing, pending contact requests
                     con.query(`SELECT
+                                users.id,
                                 users.username
                                 FROM users, contacts
                                 WHERE
@@ -234,11 +237,12 @@ app.post('/get-contacts', (req: Express.Request, res: Express.Response) => {
                         if (err) throw err;
 
                         for (let i = 0; i < results.length; i++) {
-                            outgoing_contacts.push({ username: results[i].username });
+                            outgoing_contacts.push({ id: results[i].id, username: results[i].username });
                         }
 
                         // Get all incoming, pending contact requests
                         con.query(`SELECT
+                                    users.id,
                                     users.username
                                     FROM users, contacts
                                     WHERE
@@ -248,7 +252,7 @@ app.post('/get-contacts', (req: Express.Request, res: Express.Response) => {
                             if (err) throw err;
 
                             for (let i = 0; i < results.length; i++) {
-                                incoming_contacts.push({ username: results[i].username });
+                                incoming_contacts.push({ id: results[i].id, username: results[i].username });
                             }
 
                             // Build and send response to client
