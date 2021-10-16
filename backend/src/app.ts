@@ -413,6 +413,12 @@ app.post('/get-message-threads', (req: Express.Request, res: Express.Response) =
                     let i = 0;
                     let size = results.length;
 
+                    // Check if user has no message threads
+                    if (size === 0) {
+                        res.json(message_threads);
+                        return;
+                    }
+
                     messageLoop();
                     function messageLoop() {
                         let thread_id = results[i].id;
