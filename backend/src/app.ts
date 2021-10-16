@@ -545,6 +545,11 @@ app.post('/get-conversation-messages', (req: Express.Request, res: Express.Respo
                         messages.push({ message_id: results[i].message_id, from: results[i].username, message: results[i].message });
                     }
 
+                    // Update the read status for this user/thread combo
+                    con.query('UPDATE message_thread_readstatus SET is_read=1 WHERE user_id=? AND thread_id=?', [user_id, req.body.thread_id], (err, results) => {
+                        if (err) throw err;
+                    })
+
                     res.json(messages);
                     return;
                 })
