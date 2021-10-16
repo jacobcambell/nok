@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useFocusEffect } from '@react-navigation/core'
 import { Text, StyleSheet, View, ScrollView, Pressable, TextInput } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
@@ -43,6 +43,16 @@ export default function Conversation({ navigation, route }: { navigation: any, r
             })
     }
 
+    useEffect(() => {
+        scrollViewToBottom();
+    }, [messages])
+
+    const scrollRef = React.useRef<ScrollView>();
+
+    const scrollViewToBottom = () => {
+        scrollRef.current?.scrollToEnd({ animated: true });
+    }
+
     const sendMessage = () => {
         SecureStore.getItemAsync('firebase_idToken')
             .then((idToken) => {
@@ -65,7 +75,7 @@ export default function Conversation({ navigation, route }: { navigation: any, r
                 <Ionicons name={'chevron-back-outline'} onPress={goBack} style={{ marginRight: 15 }} size={25} />
                 <Text style={styles.username}>{route.params.username}</Text>
             </View>
-            <ScrollView>
+            <ScrollView ref={scrollRef} onLayout={scrollViewToBottom}>
                 {
                     messages.length > 0 &&
                     messages.map((message) => (
