@@ -54,6 +54,10 @@ export default function Conversation({ navigation, route }: { navigation: any, r
     }
 
     const sendMessage = () => {
+        if (input.length <= 0 || input.length >= 999) {
+            return;
+        }
+
         SecureStore.getItemAsync('firebase_idToken')
             .then((idToken) => {
                 axios.post(`${API_ENDPOINT}/send-message`, {
