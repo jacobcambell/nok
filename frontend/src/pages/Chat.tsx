@@ -1,16 +1,18 @@
 import React, { useState } from 'react'
 import { useFocusEffect } from '@react-navigation/core'
-import { Text, StyleSheet, Pressable, View, ScrollView } from 'react-native'
+import { Text, StyleSheet, Pressable, View, ScrollView, Image } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { Theme } from '../Theme'
 import { API_ENDPOINT } from '../EnvironmentVariables'
 import * as SecureStore from 'expo-secure-store';
 import axios from 'axios';
+import Ionicons from '@expo/vector-icons/Ionicons';
 
 interface MessageThread {
     id: number;
     username: string;
     msg_preview: string;
+    is_read: boolean;
 }
 
 export default function Chat({ navigation }: { navigation: any }) {
@@ -51,14 +53,21 @@ export default function Chat({ navigation }: { navigation: any }) {
     return (
         <SafeAreaView style={styles.content}>
             <ScrollView>
-                <Text style={[Theme.header, { paddingHorizontal: 15, paddingVertical: 10 }]}>Chat</Text>
+                <Image style={styles.logo} source={{ uri: Theme.logoUrl }}></Image>
 
                 {
                     messageThreads.length > 0 &&
                     messageThreads.map((thread, index) => (
-                        <Pressable onPress={() => { navigation.navigate('Conversation', { thread_id: thread.id, username: thread.username }) }} style={[index === messageThreads.length - 1 ? { borderBottomWidth: 0.5 } : { borderBottomWidth: 0 }, styles.thread]} key={thread.id}>
-                            <Text style={styles.threadUser}>{thread.username}</Text>
-                            <Text style={styles.threadMsg}>{thread.msg_preview}</Text>
+                        <Pressable
+                            onPress={() => { navigation.navigate('Conversation', { thread_id: thread.id, username: thread.username }) }}
+                            style={[index === messageThreads.length - 1 ? { borderBottomWidth: 0.5 } : { borderBottomWidth: 0 }, styles.thread, { backgroundColor: (thread.is_read) ? Theme.colors.white : Theme.colors.white }]}
+                            key={thread.id}
+                        >
+                            <Ionicons name={'ellipse'} size={12} style={{ color: Theme.colors.mediumblue, flex: 1, display: (thread.is_read) ? 'none' : 'flex' }} />
+                            <View style={{ flex: 7 }}>
+                                <Text style={styles.threadUser}>{thread.username}</Text>
+                                <Text style={styles.threadMsg}>{thread.msg_preview}</Text>
+                            </View>
                         </Pressable>
                     ))
                 }
@@ -81,6 +90,11 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: Theme.colors.white
     },
+    logo: {
+        width: 55,
+        height: 25,
+        margin: 15
+    },
     noContacts: {
         paddingHorizontal: 15
     },
@@ -89,7 +103,10 @@ const styles = StyleSheet.create({
         borderTopColor: Theme.colors.lightgrey,
         borderBottomColor: Theme.colors.lightgrey,
         paddingVertical: 5,
-        paddingHorizontal: 15
+        paddingHorizontal: 15,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between'
     },
     threadUser: {
         fontWeight: 'bold',
