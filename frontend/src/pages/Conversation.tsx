@@ -16,13 +16,14 @@ interface Message {
 
 export default function Conversation({ navigation, route }: { navigation: any, route: any }) {
 
+    const [input, setInput] = useState<string>('');
+    const [messages, setMessages] = useState<Message[]>([]);
+
     useFocusEffect(
         React.useCallback(() => {
             loadMessages();
         }, [])
     );
-
-    const [messages, setMessages] = useState<Message[]>([]);
 
     const goBack = () => {
         navigation.navigate('Chat');
@@ -39,6 +40,21 @@ export default function Conversation({ navigation, route }: { navigation: any, r
                         setMessages(res.data);
                     })
                     .catch((err) => { })
+            })
+    }
+
+    const sendMessage = () => {
+        SecureStore.getItemAsync('firebase_idToken')
+            .then((idToken) => {
+                axios.post(`${API_ENDPOINT}/send-message`, {
+                    idToken,
+                    thread_id: route.params.thread_id,
+                    message: input
+                })
+                    .then(() => {
+                        loadMessages();
+                    })
+                    .catch((err) => { alert(err) })
             })
     }
 
@@ -60,8 +76,8 @@ export default function Conversation({ navigation, route }: { navigation: any, r
                 }
             </ScrollView>
             <View style={styles.bottomBar}>
-                <TextInput placeholder='Send a message' style={styles.textField} />
-                <Pressable style={styles.sendBtn}>
+                <TextInput onChangeText={(text) => { setInput(text) }} placeholder='Send a message' style={styles.textField} />
+                <Pressable style={styles.sendBtn} onPress={sendMessage}>
                     <Ionicons name={'send'} size={15} style={styles.sendBtnText} />
                 </Pressable>
             </View>
