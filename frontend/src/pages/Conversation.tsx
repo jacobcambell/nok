@@ -8,16 +8,38 @@ import * as SecureStore from 'expo-secure-store';
 import axios from 'axios';
 import Ionicons from '@expo/vector-icons/Ionicons';
 
+interface Message {
+    message_id: number;
+    from: string;
+    message: string;
+}
+
 export default function Conversation({ navigation, route }: { navigation: any, route: any }) {
 
     useFocusEffect(
         React.useCallback(() => {
-            console.log(route.params)
+            loadMessages();
         }, [])
     );
 
+    const [messages, setMessages] = useState<Message[]>([]);
+
     const goBack = () => {
         navigation.navigate('Chat');
+    }
+
+    const loadMessages = () => {
+        SecureStore.getItemAsync('firebase_idToken')
+            .then((idToken) => {
+                axios.post<Message[]>(`${API_ENDPOINT}/get-conversation-messages`, {
+                    idToken,
+                    thread_id: route.params.thread_id
+                })
+                    .then((res) => {
+                        setMessages(res.data);
+                    })
+                    .catch((err) => { })
+            })
     }
 
     return (
@@ -27,7 +49,15 @@ export default function Conversation({ navigation, route }: { navigation: any, r
                 <Text style={styles.username}>{route.params.username}</Text>
             </View>
             <ScrollView>
-
+                {
+                    messages.length > 0 &&
+                    messages.map((message) => (
+                        <View key={message.message_id} style={styles.messageRow}>
+                            <Text style={styles.messageFrom}>{message.from}</Text>
+                            <Text style={styles.messageText}>{message.message}</Text>
+                        </View>
+                    ))
+                }
             </ScrollView>
             <View style={styles.bottomBar}>
                 <TextInput placeholder='Send a message' style={styles.textField} />
@@ -67,7 +97,7 @@ const styles = StyleSheet.create({
     },
     textField: {
         flex: 3,
-        backgroundColor: '#F1F1F1',
+        backgroundColor: Theme.colors.offwhite,
         paddingVertical: 8,
         paddingHorizontal: 15,
         borderRadius: 25,
@@ -85,5 +115,16 @@ const styles = StyleSheet.create({
         color: Theme.colors.white,
         textAlign: 'center',
         fontSize: Theme.fontSizes.medium
+    },
+    messageRow: {
+        marginVertical: 5,
+        paddingHorizontal: 15
+    },
+    messageFrom: {
+        fontWeight: 'bold'
+    },
+    messageText: {
+        color: Theme.colors.black
     }
+
 });

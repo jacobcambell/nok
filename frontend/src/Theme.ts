@@ -16,7 +16,8 @@ export const Theme = {
         highlight: '#EFD602',
         white: '#FFFFFF',
         red: '#C11212',
-        success: '#4BB543'
+        success: '#4BB543',
+        offwhite: '#F1F1F1'
     },
     fontSizes,
     borderRadius: 5,
