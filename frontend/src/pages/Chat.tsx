@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { useFocusEffect } from '@react-navigation/core'
-import { Text, StyleSheet, Pressable, View, ScrollView } from 'react-native'
+import { Text, StyleSheet, Pressable, View, ScrollView, Image } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { Theme } from '../Theme'
 import { API_ENDPOINT } from '../EnvironmentVariables'
@@ -53,7 +53,7 @@ export default function Chat({ navigation }: { navigation: any }) {
     return (
         <SafeAreaView style={styles.content}>
             <ScrollView>
-                <Text style={[Theme.header, { paddingHorizontal: 15, paddingVertical: 10 }]}>Chat</Text>
+                <Image style={styles.logo} source={{ uri: Theme.logoUrl }}></Image>
 
                 {
                     messageThreads.length > 0 &&
@@ -89,6 +89,11 @@ const styles = StyleSheet.create({
     content: {
         flex: 1,
         backgroundColor: Theme.colors.white
+    },
+    logo: {
+        width: 55,
+        height: 25,
+        margin: 15
     },
     noContacts: {
         paddingHorizontal: 15
