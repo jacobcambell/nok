@@ -427,6 +427,7 @@ app.post('/get-message-threads', (req: Express.Request, res: Express.Response) =
                         id: number;
                         username: string;
                         msg_preview: string;
+                        is_read: boolean;
                     }
 
                     let message_threads: MessageThread[] = [];
@@ -447,10 +448,20 @@ app.post('/get-message-threads', (req: Express.Request, res: Express.Response) =
                         let username = results[i].username;
 
                         // For each message thread, we want to load the last message from that thread
-                        con.query('SELECT messages.message FROM messages, message_threads WHERE messages.thread_id=message_threads.id AND message_threads.id=? ORDER BY messages.send_time DESC LIMIT 1', [thread_id], (err, results) => {
+                        con.query(`SELECT
+                                    messages.message,
+                                    message_thread_readstatus.is_read
+                                    FROM messages, message_threads, message_thread_readstatus
+                                    WHERE messages.thread_id=message_threads.id AND
+                                    message_threads.id=? AND
+                                    message_threads.id=message_thread_readstatus.thread_id AND
+                                    message_thread_readstatus.user_id=?
+                                    ORDER BY messages.send_time DESC LIMIT 1
+                                    `, [thread_id, user_id], (err, results) => {
                             if (err) throw err;
 
                             let last_message = '(No messages)';
+                            let is_read = true;
 
                             if (results.length !== 0) {
                                 if (results[0].message.length > 40) {
@@ -459,9 +470,11 @@ app.post('/get-message-threads', (req: Express.Request, res: Express.Response) =
                                 else {
                                     last_message = results[0].message;
                                 }
+
+                                is_read = results[0].is_read;
                             }
 
-                            message_threads.push({ id: thread_id, username: username, msg_preview: last_message });
+                            message_threads.push({ id: thread_id, username: username, msg_preview: last_message, is_read: is_read });
 
                             i++;
                             if (i < size) {
