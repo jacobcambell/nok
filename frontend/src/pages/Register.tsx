@@ -16,6 +16,11 @@ const Register = ({ navigation }: { navigation: any }) => {
     const [cPassword, setCPassword] = useState('');
 
     const handleSignup = () => {
+        if (password !== cPassword) {
+            alert('Your passwords must match');
+            return;
+        }
+
         createUserWithEmailAndPassword(firebaseAuth, email, password)
             .then(() => {
                 navigation.navigate('Main');
