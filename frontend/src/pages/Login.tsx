@@ -40,7 +40,7 @@ const Login = ({ navigation }: { navigation: any }) => {
                 <Image style={styles.logo} source={{ uri: Theme.logoUrl }} />
                 <Text style={styles.header}>Login</Text>
 
-                <TextInput onChangeText={e => setEmail(e)} placeholder="Email" style={styles.input}></TextInput>
+                <TextInput autoCapitalize='none' onChangeText={e => setEmail(e)} placeholder="Email" style={styles.input}></TextInput>
                 <TextInput onChangeText={e => setPassword(e)} secureTextEntry={true} placeholder="Password" style={styles.input}></TextInput>
 
                 <Pressable onPress={handleLogin} style={styles.button}>
