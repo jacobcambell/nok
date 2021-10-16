@@ -58,7 +58,10 @@ export default function MyProfile({ navigation }: { navigation: any }) {
 
     return (
         <SafeAreaView style={styles.content}>
-            <Text style={Theme.header}>My Profile</Text>
+            <View style={styles.topBar}>
+                <Text style={Theme.header}>My Profile</Text>
+                <Image style={styles.logo} source={{ uri: Theme.logoUrl }}></Image>
+            </View>
 
             <Pressable style={styles.row}>
                 <View>
@@ -75,8 +78,6 @@ export default function MyProfile({ navigation }: { navigation: any }) {
             <Pressable onPress={handleLogout} style={styles.btnLogout}>
                 <Text style={styles.logoutText}>Log Out</Text>
             </Pressable>
-
-            <Image style={styles.logo} source={{ uri: Theme.logoUrl }}></Image>
         </SafeAreaView>
     )
 }
@@ -84,15 +85,27 @@ export default function MyProfile({ navigation }: { navigation: any }) {
 const styles = StyleSheet.create({
     content: {
         flex: 1,
-        backgroundColor: Theme.colors.white,
-        padding: 15
+        backgroundColor: Theme.colors.white
+    },
+    topBar: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        paddingHorizontal: 15,
+        paddingVertical: 15
+    },
+    logo: {
+        width: 55,
+        height: 25,
+        alignSelf: 'center'
     },
     row: {
         borderTopWidth: 0.25,
         borderBottomWidth: 0.25,
         borderColor: Theme.colors.lightgrey,
-        paddingVertical: 5,
-        marginVertical: 15,
+        paddingVertical: 10,
+        paddingHorizontal: 15,
+        marginVertical: 5,
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center'
@@ -124,10 +137,5 @@ const styles = StyleSheet.create({
         fontSize: Theme.fontSizes.small,
         color: Theme.colors.red,
         textAlign: 'center'
-    },
-    logo: {
-        width: 55,
-        height: 25,
-        alignSelf: 'center'
     }
 });
