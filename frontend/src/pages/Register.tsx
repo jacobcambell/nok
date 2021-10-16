@@ -1,5 +1,5 @@
 import React, { useState, useContext } from 'react';
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View, Image } from "react-native";
 import { TextInput } from 'react-native-gesture-handler';
 import Center from '../Center';
 import { Theme } from '../Theme';
@@ -38,11 +38,12 @@ const Register = ({ navigation }: { navigation: any }) => {
     return (
         <Center>
             <View style={styles.content}>
+                <Image style={styles.logo} source={{ uri: Theme.logoUrl }} />
                 <Text style={styles.header}>Sign Up</Text>
 
-                <TextInput onChangeText={e => setEmail(e)} placeholder="Email" style={styles.input} placeholderTextColor={Theme.colors.white}></TextInput>
-                <TextInput onChangeText={e => setPassword(e)} secureTextEntry={true} placeholder="Password" style={styles.input} placeholderTextColor={Theme.colors.white}></TextInput>
-                <TextInput onChangeText={e => setCPassword(e)} secureTextEntry={true} placeholder="Confirm Password" style={styles.input} placeholderTextColor={Theme.colors.white}></TextInput>
+                <TextInput onChangeText={e => setEmail(e)} placeholder="Email" style={styles.input}></TextInput>
+                <TextInput onChangeText={e => setPassword(e)} secureTextEntry={true} placeholder="Password" style={styles.input}></TextInput>
+                <TextInput onChangeText={e => setCPassword(e)} secureTextEntry={true} placeholder="Confirm Password" style={styles.input}></TextInput>
 
                 <Pressable onPress={handleSignup} style={styles.button}>
                     <Text style={styles.buttonText}>Sign Up</Text>
@@ -62,8 +63,13 @@ const styles = StyleSheet.create({
     header: {
         fontSize: Theme.fontSizes.large,
         textAlign: 'center',
-        color: Theme.colors.white,
         paddingBottom: 25
+    },
+    logo: {
+        alignSelf: 'center',
+        width: 77,
+        height: 35,
+        marginBottom: 15
     },
     input: {
         borderWidth: 1,
@@ -72,8 +78,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: 7,
         fontSize: Theme.fontSizes.normal,
         borderRadius: Theme.borderRadius,
-        marginVertical: 10,
-        color: Theme.colors.white
+        marginVertical: 10
     },
     button: {
         paddingVertical: 10,
@@ -81,7 +86,7 @@ const styles = StyleSheet.create({
         marginVertical: 5,
         alignSelf: 'stretch',
         alignItems: 'center',
-        backgroundColor: Theme.colors.grey
+        backgroundColor: Theme.colors.black
     },
     buttonText: {
         color: Theme.colors.white,

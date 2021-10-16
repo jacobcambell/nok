@@ -1,5 +1,5 @@
 import React, { useContext, useState } from 'react'
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { AuthContext } from '../contexts/AuthContext';
 import { Theme } from '../Theme';
@@ -75,6 +75,8 @@ export default function MyProfile({ navigation }: { navigation: any }) {
             <Pressable onPress={handleLogout} style={styles.btnLogout}>
                 <Text style={styles.logoutText}>Log Out</Text>
             </Pressable>
+
+            <Image style={styles.logo} source={{ uri: Theme.logoUrl }}></Image>
         </SafeAreaView>
     )
 }
@@ -122,5 +124,10 @@ const styles = StyleSheet.create({
         fontSize: Theme.fontSizes.small,
         color: Theme.colors.red,
         textAlign: 'center'
+    },
+    logo: {
+        width: 55,
+        height: 25,
+        alignSelf: 'center'
     }
 });
