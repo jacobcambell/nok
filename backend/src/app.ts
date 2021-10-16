@@ -47,9 +47,20 @@ app.post('/ping', (req: Express.Request, res: Express.Response) => {
                 if (results[0].c === 0) {
                     // UID is not in our users table. Let's add them to it
                     let newUsername = generateName();
-                    con.query('INSERT INTO users (firebase_uid, username) VALUES (?, ?)', [uid, newUsername], (err, results) => {
+
+                    con.query('SELECT COUNT(*) AS c FROM users WHERE users.username=?', [newUsername], (err, results) => {
                         if (err) throw err;
+
+                        if (results[0].c === 1) {
+                            // User with that username already exists, so we'll add some numbers to the end (100 through 999)
+                            newUsername += (Math.random() * (999 - 100) + 100).toString();
+                        }
+
+                        con.query('INSERT INTO users (firebase_uid, username) VALUES (?, ?)', [uid, newUsername], (err, results) => {
+                            if (err) throw err;
+                        });
                     });
+
                 }
                 else {
                     // This uid already exists in our users table
