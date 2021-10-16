@@ -38,7 +38,7 @@ export default function MyProfile({ navigation }: { navigation: any }) {
     );
 
     const changeUsername = () => {
-        navigation.navigate('ChangeUsername');
+        navigation.navigate('ChangeUsername', { myUsername });
     }
 
     const fetchUsername = () => {
