@@ -613,8 +613,13 @@ app.post('/send-message', (req: Express.Request, res: Express.Response) => {
                     con.query(`INSERT INTO messages (thread_id, from_user, send_time, message) VALUES (?, ?, NOW(), ?)`, [req.body.thread_id, user_id, req.body.message], (err, results) => {
                         if (err) throw err;
 
-                        res.sendStatus(200);
-                        return;
+                        // Update read status for other user
+                        con.query('UPDATE message_thread_readstatus SET is_read=0 WHERE thread_id=? AND user_id!=?', [req.body.thread_id, user_id], (err, results) => {
+                            if (err) throw err;
+
+                            res.sendStatus(200);
+                            return;
+                        });
                     });
                 })
             })
