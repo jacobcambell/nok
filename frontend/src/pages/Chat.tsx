@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { useFocusEffect } from '@react-navigation/core'
-import { Text, StyleSheet, View } from 'react-native'
+import { Text, StyleSheet, Pressable } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { Theme } from '../Theme'
 import { API_ENDPOINT } from '../EnvironmentVariables'
@@ -13,7 +13,7 @@ interface MessageThread {
     msg_preview: string;
 }
 
-export default function Chat() {
+export default function Chat({ navigation }: { navigation: any }) {
 
     const [messageThreads, setMessageThreads] = useState<MessageThread[]>([]);
 
@@ -43,10 +43,10 @@ export default function Chat() {
             {
                 messageThreads.length > 0 &&
                 messageThreads.map((thread, index) => (
-                    <View style={[index === messageThreads.length - 1 ? { borderBottomWidth: 0.5 } : { borderBottomWidth: 0 }, styles.thread]} key={thread.id}>
+                    <Pressable onPress={() => { navigation.navigate('Conversation', { thread_id: thread.id, username: thread.username }) }} style={[index === messageThreads.length - 1 ? { borderBottomWidth: 0.5 } : { borderBottomWidth: 0 }, styles.thread]} key={thread.id}>
                         <Text style={styles.threadUser}>{thread.username}</Text>
                         <Text style={styles.threadMsg}>{thread.msg_preview}</Text>
-                    </View>
+                    </Pressable>
                 ))
             }
         </SafeAreaView>
