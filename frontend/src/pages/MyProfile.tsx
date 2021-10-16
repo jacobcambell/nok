@@ -132,6 +132,7 @@ const styles = StyleSheet.create({
         padding: 5,
         borderWidth: 1,
         borderColor: Theme.colors.red,
+        marginHorizontal: 15
     },
     logoutText: {
         fontSize: Theme.fontSizes.small,
