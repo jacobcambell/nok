@@ -354,6 +354,17 @@ app.post('/process-contact', (req: Express.Request, res: Express.Response) => {
             // Create a message thread for these two users
             con.query('INSERT INTO message_threads (user1, user2) VALUES (?, ?)', [contact_id, user_id], (err, results) => {
                 if (err) throw err;
+
+                // This is the id of the message thread we just created
+                let thread_id = results.insertId;
+
+                // Now we want to insert read status rows for each user in this thread
+                con.query('INSERT INTO message_thread_readstatus (thread_id, user_id, is_read) VALUES (?, ?, 1)', [thread_id, user_id], (err, results) => {
+                    if (err) throw err;
+                });
+                con.query('INSERT INTO message_thread_readstatus (thread_id, user_id, is_read) VALUES (?, ?, 1)', [thread_id, contact_id], (err, results) => {
+                    if (err) throw err;
+                });
             });
         });
     }
