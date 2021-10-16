@@ -446,7 +446,69 @@ app.post('/get-message-threads', (req: Express.Request, res: Express.Response) =
                 });
             })
         });
+})
 
+app.post('/get-conversation-messages', (req: Express.Request, res: Express.Response) => {
+    const check = [
+        req.body.idToken,
+        req.body.thread_id
+    ];
+
+    if (check.includes(undefined)) {
+        res.sendStatus(400);
+        return;
+    }
+
+    firebaseAdmin
+        .auth()
+        .verifyIdToken(req.body.idToken)
+        .then((decodedToken) => {
+            const uid = decodedToken.uid;
+
+            // Get this user's id from their firebase uid
+            con.query('SELECT users.id FROM users WHERE users.firebase_uid=?', [uid], (err, results) => {
+                if (err) throw err;
+
+                if (results.length === 0) {
+                    // For some reason there is no user id matching that firebase uid
+                    res.sendStatus(400);
+                    return;
+                }
+
+                const user_id = results[0].id;
+
+                // Load messages from the requested thread id, IF the user is in it. Returns empty if they do not belong to the requested thread id
+                con.query(`SELECT
+                            messages.id AS message_id,
+                            messages.message,
+                            users.username
+                            FROM messages, message_threads, users
+                            WHERE
+                            (message_threads.user1=? OR message_threads.user2=?) AND
+                            message_threads.id=messages.thread_id AND
+                            message_threads.id=? AND
+                            users.id=messages.from_user
+                            ORDER BY messages.send_time ASC
+                `, [user_id, user_id, req.body.thread_id], (err, results) => {
+                    if (err) throw err;
+
+                    interface Message {
+                        message_id: number;
+                        from: string;
+                        message: string;
+                    }
+
+                    let messages: Message[] = [];
+
+                    for (let i = 0; i < results.length; i++) {
+                        messages.push({ message_id: results[i].message_id, from: results[i].username, message: results[i].message });
+                    }
+
+                    res.json(messages);
+                    return;
+                })
+            });
+        })
 })
 
 app.listen(PORT, () => {
