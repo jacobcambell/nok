@@ -53,6 +53,7 @@ export default function Conversation({ navigation, route }: { navigation: any, r
                 })
                     .then(() => {
                         loadMessages();
+                        setInput('');
                     })
                     .catch((err) => { alert(err) })
             })
@@ -76,7 +77,7 @@ export default function Conversation({ navigation, route }: { navigation: any, r
                 }
             </ScrollView>
             <View style={styles.bottomBar}>
-                <TextInput onChangeText={(text) => { setInput(text) }} placeholder='Send a message' style={styles.textField} />
+                <TextInput value={input} onChangeText={(text) => { setInput(text) }} placeholder='Send a message' style={styles.textField} />
                 <Pressable style={styles.sendBtn} onPress={sendMessage}>
                     <Ionicons name={'send'} size={15} style={styles.sendBtnText} />
                 </Pressable>
