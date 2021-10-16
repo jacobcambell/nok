@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Text, StyleSheet, Pressable, View } from 'react-native';
+import { Text, StyleSheet, Pressable, View, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Theme } from '../Theme';
 import * as SecureStore from 'expo-secure-store';
@@ -73,65 +73,68 @@ export default function Contacts({ navigation }: { navigation: any }) {
                 <Text style={styles.btnText}>Add Contact +</Text>
             </Pressable>
 
-            {
-                (contacts.active_contacts.length === 0 && contacts.incoming_contacts.length === 0 && contacts.active_contacts.length === 0) &&
-                <Text style={styles.noContacts}>You do not have any contacts :(</Text>
-            }
+            <ScrollView>
 
-            {
-                // Incoming Contact Requests
-                contacts.incoming_contacts.length > 0 &&
-                <Text style={styles.label}>Incoming Requests {contacts.incoming_contacts.length}</Text>
-            }
-            {
-                contacts.incoming_contacts.length > 0 &&
-                contacts.incoming_contacts.map((contact) => (
-                    <Pressable style={styles.contact} key={contact.id}>
-                        <Text style={styles.contactName}>{contact.username}</Text>
-                        <View style={styles.btnContainer}>
-                            <Pressable style={styles.btnAccept} onPress={() => { processContact(contact.id, 'accept') }}>
-                                <Text style={styles.btnText}>Accept</Text>
-                            </Pressable>
-                            <Pressable style={styles.btnDeny} onPress={() => { processContact(contact.id, 'deny') }}>
-                                <Text style={styles.btnText}>Deny</Text>
-                            </Pressable>
-                        </View>
-                    </Pressable>
-                ))
-            }
+                {
+                    (contacts.active_contacts.length === 0 && contacts.incoming_contacts.length === 0 && contacts.active_contacts.length === 0) &&
+                    <Text style={styles.noContacts}>You do not have any contacts :(</Text>
+                }
 
-            {
-                // Outgoing Contact Requests
-                contacts.outgoing_contacts.length > 0 &&
-                <Text style={styles.label}>Outgoing Requests {contacts.outgoing_contacts.length}</Text>
-            }
-            {
-                contacts.outgoing_contacts.length > 0 &&
-                contacts.outgoing_contacts.map((contact) => (
-                    <Pressable style={styles.contact} key={contact.id}>
-                        <Text style={styles.contactName}>{contact.username}</Text>
-                        <View style={styles.btnContainer}>
-                            <Pressable style={styles.btnCancel} onPress={() => { processContact(contact.id, 'cancel') }}>
-                                <Text style={styles.btnText}>Cancel</Text>
-                            </Pressable>
-                        </View>
-                    </Pressable>
-                ))
-            }
+                {
+                    // Incoming Contact Requests
+                    contacts.incoming_contacts.length > 0 &&
+                    <Text style={styles.label}>Incoming Requests {contacts.incoming_contacts.length}</Text>
+                }
+                {
+                    contacts.incoming_contacts.length > 0 &&
+                    contacts.incoming_contacts.map((contact) => (
+                        <Pressable style={styles.contact} key={contact.id}>
+                            <Text style={styles.contactName}>{contact.username}</Text>
+                            <View style={styles.btnContainer}>
+                                <Pressable style={styles.btnAccept} onPress={() => { processContact(contact.id, 'accept') }}>
+                                    <Text style={styles.btnText}>Accept</Text>
+                                </Pressable>
+                                <Pressable style={styles.btnDeny} onPress={() => { processContact(contact.id, 'deny') }}>
+                                    <Text style={styles.btnText}>Deny</Text>
+                                </Pressable>
+                            </View>
+                        </Pressable>
+                    ))
+                }
 
-            {
-                // All Non-Pending Contact Requests
-                contacts.active_contacts.length > 0 &&
-                <Text style={styles.label}>Active Contacts {contacts.active_contacts.length}</Text>
-            }
-            {
-                contacts.active_contacts.length > 0 &&
-                contacts.active_contacts.map((contact) => (
-                    <Pressable style={styles.contact} key={contact.id}>
-                        <Text style={styles.contactName}>{contact.username}</Text>
-                    </Pressable>
-                ))
-            }
+                {
+                    // Outgoing Contact Requests
+                    contacts.outgoing_contacts.length > 0 &&
+                    <Text style={styles.label}>Outgoing Requests {contacts.outgoing_contacts.length}</Text>
+                }
+                {
+                    contacts.outgoing_contacts.length > 0 &&
+                    contacts.outgoing_contacts.map((contact) => (
+                        <Pressable style={styles.contact} key={contact.id}>
+                            <Text style={styles.contactName}>{contact.username}</Text>
+                            <View style={styles.btnContainer}>
+                                <Pressable style={styles.btnCancel} onPress={() => { processContact(contact.id, 'cancel') }}>
+                                    <Text style={styles.btnText}>Cancel</Text>
+                                </Pressable>
+                            </View>
+                        </Pressable>
+                    ))
+                }
+
+                {
+                    // All Non-Pending Contact Requests
+                    contacts.active_contacts.length > 0 &&
+                    <Text style={styles.label}>Active Contacts {contacts.active_contacts.length}</Text>
+                }
+                {
+                    contacts.active_contacts.length > 0 &&
+                    contacts.active_contacts.map((contact) => (
+                        <Pressable style={styles.contact} key={contact.id}>
+                            <Text style={styles.contactName}>{contact.username}</Text>
+                        </Pressable>
+                    ))
+                }
+            </ScrollView>
         </SafeAreaView >
     )
 }
