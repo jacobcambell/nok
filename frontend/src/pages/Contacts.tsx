@@ -74,6 +74,11 @@ export default function Contacts({ navigation }: { navigation: any }) {
             </Pressable>
 
             {
+                (contacts.active_contacts.length === 0 && contacts.incoming_contacts.length === 0 && contacts.active_contacts.length === 0) &&
+                <Text style={styles.noContacts}>You do not have any contacts :(</Text>
+            }
+
+            {
                 // Incoming Contact Requests
                 contacts.incoming_contacts.length > 0 &&
                 <Text style={styles.label}>Incoming Requests {contacts.incoming_contacts.length}</Text>
@@ -141,10 +146,13 @@ const styles = StyleSheet.create({
         backgroundColor: Theme.colors.mediumblue,
         padding: 10,
         borderRadius: 25,
-        marginBottom: 15
+        marginVertical: 15
     },
     btnText: {
         color: Theme.colors.white,
+        textAlign: 'center'
+    },
+    noContacts: {
         textAlign: 'center'
     },
     label: {

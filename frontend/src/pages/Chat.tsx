@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { useFocusEffect } from '@react-navigation/core'
-import { Text, StyleSheet, Pressable } from 'react-native'
+import { Text, StyleSheet, Pressable, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { Theme } from '../Theme'
 import { API_ENDPOINT } from '../EnvironmentVariables'
@@ -38,7 +38,7 @@ export default function Chat({ navigation }: { navigation: any }) {
 
     return (
         <SafeAreaView style={styles.content}>
-            <Text style={[Theme.header, { padding: 15 }]}>Chat</Text>
+            <Text style={[Theme.header, { paddingHorizontal: 15, paddingVertical: 10 }]}>Chat</Text>
 
             {
                 messageThreads.length > 0 &&
@@ -49,6 +49,15 @@ export default function Chat({ navigation }: { navigation: any }) {
                     </Pressable>
                 ))
             }
+            {
+                messageThreads.length === 0 &&
+                <View>
+                    <Text style={styles.noContacts}>You do not have any contacts.</Text>
+                    <Pressable onPress={() => { navigation.navigate('AddContact') }} style={styles.addContact}>
+                        <Text style={styles.btnText}>Add Contact</Text>
+                    </Pressable>
+                </View>
+            }
         </SafeAreaView>
     )
 }
@@ -57,6 +66,9 @@ const styles = StyleSheet.create({
     content: {
         flex: 1,
         backgroundColor: Theme.colors.white
+    },
+    noContacts: {
+        paddingHorizontal: 15
     },
     thread: {
         borderTopWidth: 0.5,
@@ -71,5 +83,16 @@ const styles = StyleSheet.create({
     },
     threadMsg: {
         color: Theme.colors.grey
-    }
+    },
+    addContact: {
+        backgroundColor: Theme.colors.mediumblue,
+        padding: 10,
+        borderRadius: 25,
+        marginVertical: 10,
+        marginHorizontal: 15
+    },
+    btnText: {
+        color: Theme.colors.white,
+        textAlign: 'center'
+    },
 });
