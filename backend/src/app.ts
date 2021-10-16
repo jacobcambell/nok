@@ -569,6 +569,63 @@ app.post('/send-message', (req: Express.Request, res: Express.Response) => {
         })
 })
 
+app.post('/change-username', (req: Express.Request, res: Express.Response) => {
+    const check = [
+        req.body.idToken,
+        req.body.username
+    ];
+
+    if (check.includes(undefined)) {
+        res.sendStatus(400);
+        return;
+    }
+
+    // Check username length
+    if (typeof req.body.username !== 'string' || req.body.username.length <= 0 || req.body.username.length > 15) {
+        res.sendStatus(400);
+        return;
+    }
+
+    firebaseAdmin
+        .auth()
+        .verifyIdToken(req.body.idToken)
+        .then((decodedToken) => {
+            const uid = decodedToken.uid;
+
+            // Get this user's id from their firebase uid
+            con.query('SELECT users.id FROM users WHERE users.firebase_uid=?', [uid], (err, results) => {
+                if (err) throw err;
+
+                if (results.length === 0) {
+                    // For some reason there is no user id matching that firebase uid
+                    res.sendStatus(400);
+                    return;
+                }
+
+                const user_id = results[0].id;
+
+                // Check if the requested username already exists
+                con.query('SELECT COUNT(*) as c FROM users WHERE users.username=?', [req.body.username], (err, results) => {
+                    if (err) throw err;
+
+                    if (results[0].c > 0) {
+                        // Someone with the requested username already exists
+                        res.json({ error: true, message: 'Username taken' });
+                        return;
+                    }
+
+                    // No users with this username, update this user
+                    con.query('UPDATE users SET users.username=? WHERE users.id=?', [req.body.username, user_id], (err, results) => {
+                        if (err) throw err;
+
+                        res.json({ error: false, message: 'Updated username successfully' })
+                        return;
+                    });
+                })
+            })
+        })
+})
+
 app.listen(PORT, () => {
     console.log('Listening on ' + PORT)
 })
