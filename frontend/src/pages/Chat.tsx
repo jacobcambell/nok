@@ -24,6 +24,7 @@ export default function Chat({ navigation }: { navigation: any }) {
     );
 
     const loadThreads = () => {
+        // When a user first signs up this will send null to the server since their token isn't set fast enough, but it's ok because they will have no threads anyways
         SecureStore.getItemAsync('firebase_idToken')
             .then((idToken) => {
                 axios.post<MessageThread[]>(`${API_ENDPOINT}/get-message-threads`, {
