@@ -19,12 +19,23 @@ export default function Chat({ navigation }: { navigation: any }) {
 
     useFocusEffect(
         React.useCallback(() => {
-            loadThreads();
+            SecureStore.getItemAsync('firebase_idToken')
+                .then((idToken) => {
+                    if (idToken === null) {
+                        // Firebase hasn't gotten a chance to update the token yet, so we'll wait a few seconds and then load threads
+                        setTimeout(() => {
+                            loadThreads();
+                        }, 3000)
+                    }
+                    else {
+                        // Token alredy set, go ahead and instantly load threads
+                        loadThreads();
+                    }
+                })
         }, [])
     );
 
     const loadThreads = () => {
-        // When a user first signs up this will send null to the server since their token isn't set fast enough, but it's ok because they will have no threads anyways
         SecureStore.getItemAsync('firebase_idToken')
             .then((idToken) => {
                 axios.post<MessageThread[]>(`${API_ENDPOINT}/get-message-threads`, {
