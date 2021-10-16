@@ -29,7 +29,7 @@ app.post('/ping', (req: Express.Request, res: Express.Response) => {
         req.body.idToken
     ];
 
-    if (check.includes(undefined)) {
+    if (check.includes(undefined) || check.includes(null)) {
         res.sendStatus(400);
         return;
     }
@@ -47,9 +47,20 @@ app.post('/ping', (req: Express.Request, res: Express.Response) => {
                 if (results[0].c === 0) {
                     // UID is not in our users table. Let's add them to it
                     let newUsername = generateName();
-                    con.query('INSERT INTO users (firebase_uid, username) VALUES (?, ?)', [uid, newUsername], (err, results) => {
+
+                    con.query('SELECT COUNT(*) AS c FROM users WHERE users.username=?', [newUsername], (err, results) => {
                         if (err) throw err;
+
+                        if (results[0].c === 1) {
+                            // User with that username already exists, so we'll add some numbers to the end (100 through 999)
+                            newUsername += (Math.random() * (999 - 100) + 100).toString();
+                        }
+
+                        con.query('INSERT INTO users (firebase_uid, username) VALUES (?, ?)', [uid, newUsername], (err, results) => {
+                            if (err) throw err;
+                        });
                     });
+
                 }
                 else {
                     // This uid already exists in our users table
@@ -68,7 +79,7 @@ app.post('/get-my-username', (req: Express.Request, res: Express.Response) => {
         req.body.idToken
     ];
 
-    if (check.includes(undefined)) {
+    if (check.includes(undefined) || check.includes(null)) {
         res.sendStatus(400);
         return;
     }
@@ -104,7 +115,7 @@ app.post('/add-contact', (req: Express.Request, res: Express.Response) => {
         req.body.username
     ];
 
-    if (check.includes(undefined)) {
+    if (check.includes(undefined) || check.includes(null)) {
         res.sendStatus(400);
         return;
     }
@@ -176,7 +187,7 @@ app.post('/get-contacts', (req: Express.Request, res: Express.Response) => {
         req.body.idToken
     ];
 
-    if (check.includes(undefined)) {
+    if (check.includes(undefined) || check.includes(null)) {
         res.sendStatus(400);
         return;
     }
@@ -284,7 +295,7 @@ app.post('/process-contact', (req: Express.Request, res: Express.Response) => {
         req.body.idToken
     ];
 
-    if (check.includes(undefined)) {
+    if (check.includes(undefined) || check.includes(null)) {
         res.sendStatus(400);
         return;
     }
@@ -365,7 +376,7 @@ app.post('/get-message-threads', (req: Express.Request, res: Express.Response) =
         req.body.idToken
     ];
 
-    if (check.includes(undefined)) {
+    if (check.includes(undefined) || check.includes(null)) {
         res.sendStatus(400);
         return;
     }
@@ -413,6 +424,12 @@ app.post('/get-message-threads', (req: Express.Request, res: Express.Response) =
                     let i = 0;
                     let size = results.length;
 
+                    // Check if user has no message threads
+                    if (size === 0) {
+                        res.json(message_threads);
+                        return;
+                    }
+
                     messageLoop();
                     function messageLoop() {
                         let thread_id = results[i].id;
@@ -454,7 +471,7 @@ app.post('/get-conversation-messages', (req: Express.Request, res: Express.Respo
         req.body.thread_id
     ];
 
-    if (check.includes(undefined)) {
+    if (check.includes(undefined) || check.includes(null)) {
         res.sendStatus(400);
         return;
     }
@@ -518,8 +535,14 @@ app.post('/send-message', (req: Express.Request, res: Express.Response) => {
         req.body.message
     ];
 
-    if (check.includes(undefined)) {
+    if (check.includes(undefined) || check.includes(null)) {
         res.sendStatus(400)
+        return;
+    }
+
+    // Message length
+    if (typeof req.body.message !== 'string' || req.body.message.length <= 0 || req.body.message.length >= 999) {
+        res.sendStatus(400);
         return;
     }
 
@@ -562,6 +585,63 @@ app.post('/send-message', (req: Express.Request, res: Express.Response) => {
                         if (err) throw err;
 
                         res.sendStatus(200);
+                        return;
+                    });
+                })
+            })
+        })
+})
+
+app.post('/change-username', (req: Express.Request, res: Express.Response) => {
+    const check = [
+        req.body.idToken,
+        req.body.username
+    ];
+
+    if (check.includes(undefined) || check.includes(null)) {
+        res.sendStatus(400);
+        return;
+    }
+
+    // Check username length
+    if (typeof req.body.username !== 'string' || req.body.username.length <= 0 || req.body.username.length > 15) {
+        res.sendStatus(400);
+        return;
+    }
+
+    firebaseAdmin
+        .auth()
+        .verifyIdToken(req.body.idToken)
+        .then((decodedToken) => {
+            const uid = decodedToken.uid;
+
+            // Get this user's id from their firebase uid
+            con.query('SELECT users.id FROM users WHERE users.firebase_uid=?', [uid], (err, results) => {
+                if (err) throw err;
+
+                if (results.length === 0) {
+                    // For some reason there is no user id matching that firebase uid
+                    res.sendStatus(400);
+                    return;
+                }
+
+                const user_id = results[0].id;
+
+                // Check if the requested username already exists
+                con.query('SELECT COUNT(*) as c FROM users WHERE users.username=?', [req.body.username], (err, results) => {
+                    if (err) throw err;
+
+                    if (results[0].c > 0) {
+                        // Someone with the requested username already exists
+                        res.json({ error: true, message: 'Username taken' });
+                        return;
+                    }
+
+                    // No users with this username, update this user
+                    con.query('UPDATE users SET users.username=? WHERE users.id=?', [req.body.username, user_id], (err, results) => {
+                        if (err) throw err;
+
+                        res.json({ error: false, message: 'Updated username successfully' })
                         return;
                     });
                 })

@@ -27,6 +27,7 @@ const Main = ({ navigation }: { navigation: any }) => {
                     axios.post(`${API_ENDPOINT}/ping`, {
                         idToken
                     })
+                        .catch((err) => { })
                 })
         }, 3000);
     }, []);

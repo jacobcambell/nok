@@ -1,5 +1,5 @@
 import React, { useContext, useState } from 'react'
-import { Pressable, StyleSheet, Text } from 'react-native';
+import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { AuthContext } from '../contexts/AuthContext';
 import { Theme } from '../Theme';
@@ -37,6 +37,10 @@ export default function MyProfile({ navigation }: { navigation: any }) {
         }, [])
     );
 
+    const changeUsername = () => {
+        navigation.navigate('ChangeUsername', { myUsername });
+    }
+
     const fetchUsername = () => {
         SecureStore.getItemAsync('firebase_idToken')
             .then((idToken) => {
@@ -54,15 +58,25 @@ export default function MyProfile({ navigation }: { navigation: any }) {
 
     return (
         <SafeAreaView style={styles.content}>
-            <Text style={Theme.header}>My Profile</Text>
+            <View style={styles.topBar}>
+                <Text style={Theme.header}>My Profile</Text>
+                <Image style={styles.logo} source={{ uri: Theme.logoUrl }}></Image>
+            </View>
 
             <Pressable style={styles.row}>
-                <Text style={styles.label}>Username</Text>
-                <Text style={styles.username}>@{myUsername}</Text>
+                <View>
+                    <Text style={styles.label}>Username</Text>
+                    <Text style={styles.username}>@{myUsername}</Text>
+                </View>
+                <View>
+                    <Pressable onPress={changeUsername} style={styles.btnChangeUsername}>
+                        <Text style={styles.changeUsernameText}>Change</Text>
+                    </Pressable>
+                </View>
             </Pressable>
 
-            <Pressable onPress={handleLogout} style={styles.btn}>
-                <Text style={styles.logout}>Log Out</Text>
+            <Pressable onPress={handleLogout} style={styles.btnLogout}>
+                <Text style={styles.logoutText}>Log Out</Text>
             </Pressable>
         </SafeAreaView>
     )
@@ -71,14 +85,30 @@ export default function MyProfile({ navigation }: { navigation: any }) {
 const styles = StyleSheet.create({
     content: {
         flex: 1,
-        backgroundColor: Theme.colors.white,
-        padding: 15
+        backgroundColor: Theme.colors.white
+    },
+    topBar: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        paddingHorizontal: 15,
+        paddingVertical: 15
+    },
+    logo: {
+        width: 55,
+        height: 25,
+        alignSelf: 'center'
     },
     row: {
-        borderTopWidth: 0.5,
-        borderBottomWidth: 0.5,
+        borderTopWidth: 0.25,
+        borderBottomWidth: 0.25,
         borderColor: Theme.colors.lightgrey,
-        paddingVertical: 5
+        paddingVertical: 10,
+        paddingHorizontal: 15,
+        marginVertical: 5,
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center'
     },
     label: {
         fontWeight: 'bold'
@@ -88,13 +118,23 @@ const styles = StyleSheet.create({
         fontSize: Theme.fontSizes.normal,
         fontWeight: 'bold'
     },
-    btn: {
+    btnChangeUsername: {
+        backgroundColor: Theme.colors.mediumblue,
+        borderRadius: 25,
+        paddingVertical: 5,
+        paddingHorizontal: 15
+    },
+    changeUsernameText: {
+        color: Theme.colors.white
+    },
+    btnLogout: {
         marginVertical: 15,
         padding: 5,
         borderWidth: 1,
         borderColor: Theme.colors.red,
+        marginHorizontal: 15
     },
-    logout: {
+    logoutText: {
         fontSize: Theme.fontSizes.small,
         color: Theme.colors.red,
         textAlign: 'center'

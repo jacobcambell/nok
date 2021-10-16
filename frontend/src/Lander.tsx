@@ -1,5 +1,5 @@
 import React from "react";
-import { Text, StyleSheet, View, Pressable } from "react-native";
+import { Text, StyleSheet, View, Pressable, Image } from "react-native";
 import Center from "./Center";
 import { Theme } from "./Theme";
 import { useFocusEffect } from "@react-navigation/core";
@@ -20,7 +20,8 @@ const Lander = ({ navigation }: { navigation: any }) => {
     return (
         <Center>
             <View style={styles.content}>
-                <Text style={styles.header}>Welcome to Nok</Text>
+                <Image style={styles.logo} source={{ uri: Theme.logoUrl }} />
+                <Text style={styles.desc}>Messages. Simplified.</Text>
 
                 <Pressable onPress={() => { navigation.navigate('Register') }} style={[styles.button, styles.register]}>
                     <Text style={styles.buttonText}>Sign Up</Text>
@@ -38,11 +39,17 @@ const styles = StyleSheet.create({
         alignSelf: 'stretch',
         paddingHorizontal: 25
     },
-    header: {
-        fontSize: Theme.fontSizes.large,
+    logo: {
+        alignSelf: 'center',
+        width: 77,
+        height: 35,
+        marginBottom: 15
+    },
+    desc: {
+        fontSize: Theme.fontSizes.medium,
         paddingBottom: 25,
         textAlign: 'center',
-        color: Theme.colors.white
+        color: Theme.colors.black
     },
     button: {
         paddingVertical: 10,

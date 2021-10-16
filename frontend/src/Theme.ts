@@ -24,5 +24,6 @@ export const Theme = {
     header: {
         fontSize: fontSizes.medium,
         color: 'black'
-    }
+    },
+    logoUrl: 'https://imgur.com/Y6RAjkq.png'
 }

@@ -8,6 +8,7 @@ import Main from './src/Main';
 import AuthProvider from './src/contexts/AuthContext';
 import AddContact from './src/pages/AddContact';
 import Conversation from './src/pages/Conversation';
+import ChangeUsername from './src/pages/ChangeUsername';
 
 const Stack = createNativeStackNavigator();
 
@@ -23,6 +24,7 @@ const App = () => {
 
                     <Stack.Screen name="AddContact" component={AddContact} />
                     <Stack.Screen name="Conversation" component={Conversation} />
+                    <Stack.Screen name="ChangeUsername" component={ChangeUsername} />
                 </Stack.Navigator>
             </NavigationContainer>
         </AuthProvider>
