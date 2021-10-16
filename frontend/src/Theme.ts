@@ -22,7 +22,6 @@ export const Theme = {
     borderRadius: 5,
     header: {
         fontSize: fontSizes.medium,
-        paddingBottom: 10,
         color: 'black'
     }
 }
