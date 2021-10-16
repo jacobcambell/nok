@@ -29,7 +29,7 @@ app.post('/ping', (req: Express.Request, res: Express.Response) => {
         req.body.idToken
     ];
 
-    if (check.includes(undefined)) {
+    if (check.includes(undefined) || check.includes(null)) {
         res.sendStatus(400);
         return;
     }
@@ -68,7 +68,7 @@ app.post('/get-my-username', (req: Express.Request, res: Express.Response) => {
         req.body.idToken
     ];
 
-    if (check.includes(undefined)) {
+    if (check.includes(undefined) || check.includes(null)) {
         res.sendStatus(400);
         return;
     }
@@ -104,7 +104,7 @@ app.post('/add-contact', (req: Express.Request, res: Express.Response) => {
         req.body.username
     ];
 
-    if (check.includes(undefined)) {
+    if (check.includes(undefined) || check.includes(null)) {
         res.sendStatus(400);
         return;
     }
@@ -176,7 +176,7 @@ app.post('/get-contacts', (req: Express.Request, res: Express.Response) => {
         req.body.idToken
     ];
 
-    if (check.includes(undefined)) {
+    if (check.includes(undefined) || check.includes(null)) {
         res.sendStatus(400);
         return;
     }
@@ -284,7 +284,7 @@ app.post('/process-contact', (req: Express.Request, res: Express.Response) => {
         req.body.idToken
     ];
 
-    if (check.includes(undefined)) {
+    if (check.includes(undefined) || check.includes(null)) {
         res.sendStatus(400);
         return;
     }
@@ -365,7 +365,7 @@ app.post('/get-message-threads', (req: Express.Request, res: Express.Response) =
         req.body.idToken
     ];
 
-    if (check.includes(undefined)) {
+    if (check.includes(undefined) || check.includes(null)) {
         res.sendStatus(400);
         return;
     }
@@ -460,7 +460,7 @@ app.post('/get-conversation-messages', (req: Express.Request, res: Express.Respo
         req.body.thread_id
     ];
 
-    if (check.includes(undefined)) {
+    if (check.includes(undefined) || check.includes(null)) {
         res.sendStatus(400);
         return;
     }
@@ -524,7 +524,7 @@ app.post('/send-message', (req: Express.Request, res: Express.Response) => {
         req.body.message
     ];
 
-    if (check.includes(undefined)) {
+    if (check.includes(undefined) || check.includes(null)) {
         res.sendStatus(400)
         return;
     }
@@ -581,7 +581,7 @@ app.post('/change-username', (req: Express.Request, res: Express.Response) => {
         req.body.username
     ];
 
-    if (check.includes(undefined)) {
+    if (check.includes(undefined) || check.includes(null)) {
         res.sendStatus(400);
         return;
     }
