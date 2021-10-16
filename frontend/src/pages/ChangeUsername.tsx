@@ -6,12 +6,39 @@ import * as SecureStore from 'expo-secure-store'
 import axios from 'axios';
 import { API_ENDPOINT } from '../EnvironmentVariables';
 
-interface addContactResults {
+interface changeUsernameResults {
     error: boolean,
     message: string
 }
 
 export default function ChangeUsername({ navigation, route }: { navigation: any, route: any }) {
+
+    const [username, setUsername] = useState('');
+
+    const handleChange = () => {
+        // Check username length
+        if (username.length <= 0 || username.length > 15) {
+            alert('Your username should be between 1 and 15 characters');
+            return;
+        }
+
+        SecureStore.getItemAsync('firebase_idToken')
+            .then((idToken) => {
+                axios.post<changeUsernameResults>(`${API_ENDPOINT}/change-username`, {
+                    idToken,
+                    username
+                })
+                    .then((res) => {
+                        if (res.data.error) {
+                            alert(res.data.message);
+                        }
+                        else {
+                            navigation.navigate('MyProfile');
+                        }
+                    })
+                    .catch((err) => { })
+            })
+    }
 
     return (
         <SafeAreaView style={styles.content}>
@@ -19,9 +46,9 @@ export default function ChangeUsername({ navigation, route }: { navigation: any,
 
             <Text style={styles.info}>Your username can be up to 15 characters, and should only include letters and numbers.</Text>
 
-            <TextInput autoCapitalize={'none'} style={styles.input} placeholder='Enter new username'></TextInput>
+            <TextInput onChangeText={(text) => { setUsername(text) }} autoCapitalize={'none'} style={styles.input} placeholder='Enter new username'></TextInput>
 
-            <Pressable style={styles.btnChange}>
+            <Pressable onPress={handleChange} style={styles.btnChange}>
                 <Text style={styles.btnChangeText}>Change Username</Text>
             </Pressable>
         </SafeAreaView>
