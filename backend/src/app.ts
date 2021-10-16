@@ -511,6 +511,64 @@ app.post('/get-conversation-messages', (req: Express.Request, res: Express.Respo
         })
 })
 
+app.post('/send-message', (req: Express.Request, res: Express.Response) => {
+    const check = [
+        req.body.idToken,
+        req.body.thread_id,
+        req.body.message
+    ];
+
+    if (check.includes(undefined)) {
+        res.sendStatus(400)
+        return;
+    }
+
+    firebaseAdmin
+        .auth()
+        .verifyIdToken(req.body.idToken)
+        .then((decodedToken) => {
+            const uid = decodedToken.uid;
+
+            // Get this user's id from their firebase uid
+            con.query('SELECT users.id FROM users WHERE users.firebase_uid=?', [uid], (err, results) => {
+                if (err) throw err;
+
+                if (results.length === 0) {
+                    // For some reason there is no user id matching that firebase uid
+                    res.sendStatus(400);
+                    return;
+                }
+
+                const user_id = results[0].id;
+
+                // Check if this user is a member of the requested thread
+                con.query(`SELECT
+                            COUNT(*) as C from
+                            message_threads
+                            WHERE
+                            (message_threads.user1=? OR message_threads.user2=?) AND
+                            message_threads.id=?
+                            `, [user_id, user_id, req.body.thread_id], (err, results) => {
+                    if (err) throw err;
+
+                    if (results[0].c === 0) {
+                        // User does not belong to the requested thread
+                        res.sendStatus(400);
+                        return;
+                    }
+
+                    // User belongs to requested thread, add message
+                    con.query(`INSERT INTO messages (thread_id, from_user, send_time, message) VALUES (?, ?, NOW(), ?)`, [req.body.thread_id, user_id, req.body.message], (err, results) => {
+                        if (err) throw err;
+
+                        res.sendStatus(200);
+                        return;
+                    });
+                })
+            })
+        })
+})
+
 app.listen(PORT, () => {
     console.log('Listening on ' + PORT)
 })
