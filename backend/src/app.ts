@@ -540,6 +540,12 @@ app.post('/send-message', (req: Express.Request, res: Express.Response) => {
         return;
     }
 
+    // Message length
+    if (typeof req.body.message !== 'string' || req.body.message.length <= 0 || req.body.message.length >= 999) {
+        res.sendStatus(400);
+        return;
+    }
+
     firebaseAdmin
         .auth()
         .verifyIdToken(req.body.idToken)
