@@ -25,10 +25,7 @@ export default function Chat({ navigation }: { navigation: any }) {
             // Schedule API call to get message threads every 5 seconds (also call immediately)
             loadThreads();
             const checkInterval = setInterval(() => {
-                if (!fetching) {
-                    setFetching(true);
-                    loadThreads();
-                }
+                loadThreads();
             }, 5000)
 
             // Clear the interval when this component loses focus
@@ -37,22 +34,26 @@ export default function Chat({ navigation }: { navigation: any }) {
     );
 
     const loadThreads = () => {
-        SecureStore.getItemAsync('firebase_idToken')
-            .then((idToken) => {
-                if (idToken !== null) {
-                    axios.post<MessageThread[]>(`${API_ENDPOINT}/get-message-threads`, {
-                        idToken
-                    })
-                        .then((res) => {
-                            setMessageThreads(res.data);
-                            setFetching(false);
+        if (!fetching) {
+            setFetching(true);
+
+            SecureStore.getItemAsync('firebase_idToken')
+                .then((idToken) => {
+                    if (idToken !== null) {
+                        axios.post<MessageThread[]>(`${API_ENDPOINT}/get-message-threads`, {
+                            idToken
                         })
-                        .catch((err) => { })
-                } else {
-                    // idToken is null, the firebase auth provider probably hasn't set it yet. We don't want to do any fetching until we have it
-                    setFetching(false);
-                }
-            })
+                            .then((res) => {
+                                setMessageThreads(res.data);
+                                setFetching(false);
+                            })
+                            .catch((err) => { })
+                    } else {
+                        // idToken is null, the firebase auth provider probably hasn't set it yet. We don't want to do any fetching until we have it
+                        setFetching(false);
+                    }
+                })
+        }
     }
 
     return (
