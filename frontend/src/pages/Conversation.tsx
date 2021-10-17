@@ -18,10 +18,18 @@ export default function Conversation({ navigation, route }: { navigation: any, r
 
     const [input, setInput] = useState<string>('');
     const [messages, setMessages] = useState<Message[]>([]);
+    const [fetching, setFetching] = useState<boolean>(false);
 
     useFocusEffect(
         React.useCallback(() => {
+            // Schedule API call to get message threads every 5 seconds (also call immediately)
             loadMessages();
+            const checkInterval = setInterval(() => {
+                loadMessages();
+            }, 5000)
+
+            // Clear the interval when this component loses focus
+            return () => clearInterval(checkInterval);
         }, [])
     );
 
@@ -30,17 +38,27 @@ export default function Conversation({ navigation, route }: { navigation: any, r
     }
 
     const loadMessages = () => {
-        SecureStore.getItemAsync('firebase_idToken')
-            .then((idToken) => {
-                axios.post<Message[]>(`${API_ENDPOINT}/get-conversation-messages`, {
-                    idToken,
-                    thread_id: route.params.thread_id
+        if (!fetching) {
+            setFetching(true);
+
+            SecureStore.getItemAsync('firebase_idToken')
+                .then((idToken) => {
+                    if (idToken !== null) {
+                        axios.post<Message[]>(`${API_ENDPOINT}/get-conversation-messages`, {
+                            idToken,
+                            thread_id: route.params.thread_id
+                        })
+                            .then((res) => {
+                                setMessages(res.data);
+                                setFetching(false);
+                            })
+                            .catch((err) => { })
+                    } else {
+                        // idToken is null, the firebase auth provider probably hasn't set it yet. We don't want to do any fetching until we have it
+                        setFetching(false);
+                    }
                 })
-                    .then((res) => {
-                        setMessages(res.data);
-                    })
-                    .catch((err) => { })
-            })
+        }
     }
 
     useEffect(() => {
@@ -50,7 +68,7 @@ export default function Conversation({ navigation, route }: { navigation: any, r
     const scrollRef = React.useRef<ScrollView>();
 
     const scrollViewToBottom = () => {
-        scrollRef.current?.scrollToEnd({ animated: true });
+        scrollRef.current?.scrollToEnd({ animated: false });
     }
 
     const sendMessage = () => {
@@ -66,6 +84,7 @@ export default function Conversation({ navigation, route }: { navigation: any, r
                     message: input
                 })
                     .then(() => {
+                        // Manually call loadMessages
                         loadMessages();
                         setInput('');
                     })
@@ -79,7 +98,7 @@ export default function Conversation({ navigation, route }: { navigation: any, r
                 <Ionicons name={'chevron-back-outline'} onPress={goBack} style={{ marginRight: 15 }} size={25} />
                 <Text style={styles.username}>{route.params.username}</Text>
             </View>
-            <ScrollView ref={scrollRef} onLayout={scrollViewToBottom}>
+            <ScrollView ref={scrollRef} onLayout={scrollViewToBottom} onContentSizeChange={scrollViewToBottom}>
                 {
                     messages.length > 0 &&
                     messages.map((message) => (

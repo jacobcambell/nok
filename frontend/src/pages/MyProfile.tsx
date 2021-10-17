@@ -44,15 +44,17 @@ export default function MyProfile({ navigation }: { navigation: any }) {
     const fetchUsername = () => {
         SecureStore.getItemAsync('firebase_idToken')
             .then((idToken) => {
-                axios.post<getUsernameFields>(`${API_ENDPOINT}/get-my-username`, {
-                    idToken
-                })
-                    .then((results) => {
-                        setMyUsername(results.data.username);
+                if (idToken !== null) {
+                    axios.post<getUsernameFields>(`${API_ENDPOINT}/get-my-username`, {
+                        idToken
                     })
-                    .catch(() => {
-                        alert('Could not get username from server');
-                    })
+                        .then((results) => {
+                            setMyUsername(results.data.username);
+                        })
+                        .catch(() => {
+                            alert('Could not get username from server');
+                        })
+                }
             })
     }
 
