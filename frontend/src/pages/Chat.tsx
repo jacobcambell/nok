@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useFocusEffect } from '@react-navigation/core'
 import { Text, StyleSheet, Pressable, View, ScrollView, Image } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
@@ -18,35 +18,40 @@ interface MessageThread {
 export default function Chat({ navigation }: { navigation: any }) {
 
     const [messageThreads, setMessageThreads] = useState<MessageThread[]>([]);
+    const [fetching, setFetching] = useState<boolean>(false);
 
     useFocusEffect(
         React.useCallback(() => {
-            SecureStore.getItemAsync('firebase_idToken')
-                .then((idToken) => {
-                    if (idToken === null) {
-                        // Firebase hasn't gotten a chance to update the token yet, so we'll wait a few seconds and then load threads
-                        setTimeout(() => {
-                            loadThreads();
-                        }, 3000)
-                    }
-                    else {
-                        // Token alredy set, go ahead and instantly load threads
-                        loadThreads();
-                    }
-                })
+            // Schedule API call to get message threads every 5 seconds (also call immediately)
+            loadThreads();
+            const checkInterval = setInterval(() => {
+                if (!fetching) {
+                    setFetching(true);
+                    loadThreads();
+                }
+            }, 5000)
+
+            // Clear the interval when this component loses focus
+            return () => clearInterval(checkInterval);
         }, [])
     );
 
     const loadThreads = () => {
         SecureStore.getItemAsync('firebase_idToken')
             .then((idToken) => {
-                axios.post<MessageThread[]>(`${API_ENDPOINT}/get-message-threads`, {
-                    idToken
-                })
-                    .then((res) => {
-                        setMessageThreads(res.data);
+                if (idToken !== null) {
+                    axios.post<MessageThread[]>(`${API_ENDPOINT}/get-message-threads`, {
+                        idToken
                     })
-                    .catch((err) => { })
+                        .then((res) => {
+                            setMessageThreads(res.data);
+                            setFetching(false);
+                        })
+                        .catch((err) => { })
+                } else {
+                    // idToken is null, the firebase auth provider probably hasn't set it yet. We don't want to do any fetching until we have it
+                    setFetching(false);
+                }
             })
     }
 
