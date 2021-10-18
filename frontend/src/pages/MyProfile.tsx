@@ -130,7 +130,7 @@ const styles = StyleSheet.create({
         color: Theme.colors.white
     },
     btnLogout: {
-        marginVertical: 15,
+        marginVertical: 50,
         padding: 5,
         borderWidth: 1,
         borderColor: Theme.colors.red,
