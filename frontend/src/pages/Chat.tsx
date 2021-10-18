@@ -59,7 +59,10 @@ export default function Chat({ navigation }: { navigation: any }) {
     return (
         <SafeAreaView style={styles.content}>
             <ScrollView>
-                <Image style={styles.logo} source={{ uri: Theme.logoUrl }}></Image>
+                <View style={styles.topBar}>
+                    <Text style={Theme.header}>Chat</Text>
+                    <Image style={styles.logo} source={{ uri: Theme.logoUrl }}></Image>
+                </View>
 
                 {
                     messageThreads.length > 0 &&
@@ -95,6 +98,12 @@ const styles = StyleSheet.create({
     content: {
         flex: 1,
         backgroundColor: Theme.colors.white
+    },
+    topBar: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        paddingHorizontal: 15
     },
     logo: {
         width: 55,
