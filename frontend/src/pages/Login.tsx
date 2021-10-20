@@ -15,6 +15,8 @@ const Login = ({ navigation }: { navigation: any }) => {
     const [password, setPassword] = useState('');
 
     const handleLogin = () => {
+        setEmail(email.trim());
+
         signInWithEmailAndPassword(firebaseAuth, email, password)
             .then(() => {
                 navigation.navigate('Main');

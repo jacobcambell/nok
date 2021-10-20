@@ -21,6 +21,8 @@ const Register = ({ navigation }: { navigation: any }) => {
             return;
         }
 
+        setEmail(email.trim());
+
         createUserWithEmailAndPassword(firebaseAuth, email, password)
             .then(() => {
                 navigation.navigate('Main');
