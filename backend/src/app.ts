@@ -1,5 +1,4 @@
 require('dotenv').config();
-import e from 'express';
 import Express from 'express';
 import * as firebaseAdmin from 'firebase-admin';
 import mysql from 'mysql';
