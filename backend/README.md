@@ -39,3 +39,5 @@ An example of the key:
 More information about the Firebase Admin SDK: [Read more](https://firebase.google.com/docs/admin/setup)
 
 The MySQL database structure can be found in `/nok.sql`
+
+The application is built with TypeScript, you can compile it with the command `npm run tsc`
