@@ -73,7 +73,7 @@ app.post('/ping', (req: Express.Request, res: Express.Response) => {
         });
 })
 
-app.post('/get-my-username', (req: Express.Request, res: Express.Response) => {
+app.post('/get-my-username', async (req: Express.Request, res: Express.Response) => {
     const check = [
         req.body.idToken
     ];
@@ -83,29 +83,29 @@ app.post('/get-my-username', (req: Express.Request, res: Express.Response) => {
         return;
     }
 
-    firebaseAdmin
-        .auth()
-        .verifyIdToken(req.body.idToken)
-        .then((decodedToken) => {
-            const uid = decodedToken.uid;
+    let uid;
 
-            // Get this user's username based on their firebase uid
-            con.query('SELECT users.username FROM users WHERE users.firebase_uid=?', [uid], (err, results) => {
-                if (err) throw err;
+    try {
+        await firebaseAdmin.auth().verifyIdToken(req.body.idToken).then(decodedToken => { uid = decodedToken.uid })
+    }
+    catch (e) {
+        res.sendStatus(400);
+        return;
+    }
 
-                if (results.length === 0) {
-                    // User doesn't have a username for some reason?
-                    res.sendStatus(400);
-                    return;
-                }
+    // Get this user's username based on their firebase uid
+    con.query('SELECT users.username FROM users WHERE users.firebase_uid=?', [uid], (err, results) => {
+        if (err) throw err;
 
-                res.json({ error: false, username: results[0].username })
-                return;
-            });
-        })
-        .catch((error) => {
+        if (results.length === 0) {
+            // User doesn't have a username for some reason?
             res.sendStatus(400);
-        })
+            return;
+        }
+
+        res.json({ error: false, username: results[0].username })
+        return;
+    });
 })
 
 app.post('/add-contact', (req: Express.Request, res: Express.Response) => {
