@@ -12,6 +12,7 @@ interface Message {
     message_id: number;
     from: string;
     message: string;
+    message_age: number;
 }
 
 export default function Conversation({ navigation, route }: { navigation: any, route: any }) {
@@ -110,7 +111,35 @@ export default function Conversation({ navigation, route }: { navigation: any, r
                         messages.length > 0 &&
                         messages.map((message) => (
                             <View key={message.message_id} style={styles.messageRow}>
-                                <Text style={styles.messageFrom}>{message.from}</Text>
+                                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                    <Text style={styles.messageFrom}>{message.from}</Text>
+                                    <Text style={styles.messageAge}>
+                                        {
+                                            message.message_age == 0 &&
+                                            `just now`
+                                        }
+                                        {
+                                            message.message_age >= 1 && message.message_age <= 59 &&
+                                            `${message.message_age} minutes ago`
+                                        }
+                                        {
+                                            // 1 hour
+                                            message.message_age >= 60 && message.message_age <= 119 &&
+                                            `${Math.floor(message.message_age / 60)} hour ago`
+                                        }
+                                        {
+                                            // Multiple hours
+                                            message.message_age >= 120 && message.message_age <= 1339 &&
+                                            `${Math.floor(message.message_age / 60)} hours ago`
+                                        }
+                                        {
+                                            // More than a day
+                                            message.message_age >= 1440 &&
+                                            `${Math.floor(message.message_age / 1440)} days ago`
+                                        }
+                                    </Text>
+                                </View>
+
                                 <Text style={styles.messageText}>{message.message}</Text>
                             </View>
                         ))
@@ -179,7 +208,12 @@ const styles = StyleSheet.create({
         paddingHorizontal: 15
     },
     messageFrom: {
-        fontWeight: 'bold'
+        fontWeight: 'bold',
+        marginRight: 5
+    },
+    messageAge: {
+        color: Theme.colors.grey,
+        fontSize: Theme.fontSizes.xsmall
     },
     messageText: {
         color: Theme.colors.black
