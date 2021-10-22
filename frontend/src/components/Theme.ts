@@ -1,8 +1,8 @@
 const fontSizes = {
     xsmall: 10,
-    small: 13,
-    normal: 16,
-    medium: 22,
+    small: 12,
+    normal: 14,
+    medium: 18,
     large: 28
 }
 
