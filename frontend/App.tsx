@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import Lander from './src/Lander';
+import Lander from './src/pages/Lander';
 import Login from './src/pages/Login';
 import Register from './src/pages/Register';
 import Main from './src/Main';

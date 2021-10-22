@@ -1,10 +1,10 @@
 import React, { useState } from 'react'
 import { Text, StyleSheet, Pressable, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Theme } from '../Theme';
+import { Theme } from '../components/Theme';
 import * as SecureStore from 'expo-secure-store'
 import axios from 'axios';
-import { API_ENDPOINT } from '../EnvironmentVariables';
+import { API_ENDPOINT } from '../components/EnvironmentVariables';
 
 interface changeUsernameResults {
     error: boolean,
