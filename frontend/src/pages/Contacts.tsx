@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Text, StyleSheet, Pressable, View, ScrollView } from 'react-native';
+import { Text, StyleSheet, Pressable, View, ScrollView, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Theme } from '../components/Theme';
 import * as SecureStore from 'expo-secure-store';
@@ -67,7 +67,10 @@ export default function Contacts({ navigation }: { navigation: any }) {
 
     return (
         <SafeAreaView style={styles.content}>
-            <Text style={Theme.header}>Contacts</Text>
+            <View style={styles.topBar}>
+                <Text style={Theme.header}>Contacts</Text>
+                <Image style={styles.logo} source={{ uri: Theme.logoUrl }}></Image>
+            </View>
 
             <Pressable onPress={handleAdd} style={styles.addContact}>
                 <Text style={styles.btnText}>Add Contact +</Text>
@@ -142,14 +145,25 @@ export default function Contacts({ navigation }: { navigation: any }) {
 const styles = StyleSheet.create({
     content: {
         flex: 1,
-        backgroundColor: Theme.colors.white,
-        padding: 15
+        backgroundColor: Theme.colors.white
+    },
+    topBar: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        paddingHorizontal: 15
+    },
+    logo: {
+        width: 55,
+        height: 25,
+        margin: 15
     },
     addContact: {
         backgroundColor: Theme.colors.mediumblue,
         padding: 10,
         borderRadius: 25,
-        marginVertical: 15
+        marginBottom: 15,
+        marginHorizontal: 15
     },
     btnText: {
         color: Theme.colors.white,
@@ -161,7 +175,8 @@ const styles = StyleSheet.create({
     label: {
         fontWeight: 'bold',
         marginBottom: 5,
-        marginTop: 10
+        marginTop: 10,
+        paddingHorizontal: 15
     },
     contact: {
         borderTopWidth: 0.25,
@@ -172,7 +187,8 @@ const styles = StyleSheet.create({
         flexWrap: 'wrap',
         flexDirection: 'row',
         alignItems: 'center',
-        justifyContent: 'space-between'
+        justifyContent: 'space-between',
+        paddingHorizontal: 15
     },
     contactName: {
         fontSize: Theme.fontSizes.normal
