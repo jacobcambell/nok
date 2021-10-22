@@ -2,12 +2,12 @@ import React, { useContext, useState } from 'react'
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { AuthContext } from '../contexts/AuthContext';
-import { Theme } from '../Theme';
+import { Theme } from '../components/Theme';
 import { signOut } from '@firebase/auth';
 import * as SecureStore from 'expo-secure-store';
 import { useFocusEffect } from '@react-navigation/core';
 import axios from 'axios';
-import { API_ENDPOINT } from '../EnvironmentVariables';
+import { API_ENDPOINT } from '../components/EnvironmentVariables';
 
 interface getUsernameFields {
     error: boolean,

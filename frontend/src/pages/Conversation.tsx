@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react'
 import { useFocusEffect } from '@react-navigation/core'
-import { Text, StyleSheet, View, ScrollView, Pressable, TextInput } from 'react-native'
+import { Text, StyleSheet, View, ScrollView, Pressable, TextInput, KeyboardAvoidingView, Platform } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { Theme } from '../Theme'
-import { API_ENDPOINT } from '../EnvironmentVariables'
+import { Theme } from '../components/Theme'
+import { API_ENDPOINT } from '../components/EnvironmentVariables'
 import * as SecureStore from 'expo-secure-store';
 import axios from 'axios';
 import Ionicons from '@expo/vector-icons/Ionicons';
@@ -12,6 +12,7 @@ interface Message {
     message_id: number;
     from: string;
     message: string;
+    message_age: number;
 }
 
 export default function Conversation({ navigation, route }: { navigation: any, route: any }) {
@@ -37,27 +38,33 @@ export default function Conversation({ navigation, route }: { navigation: any, r
         navigation.navigate('Chat');
     }
 
-    const loadMessages = () => {
+    const loadMessages = async () => {
         if (!fetching) {
             setFetching(true);
 
-            SecureStore.getItemAsync('firebase_idToken')
-                .then((idToken) => {
-                    if (idToken !== null) {
-                        axios.post<Message[]>(`${API_ENDPOINT}/get-conversation-messages`, {
-                            idToken,
-                            thread_id: route.params.thread_id
-                        })
-                            .then((res) => {
-                                setMessages(res.data);
-                                setFetching(false);
-                            })
-                            .catch((err) => { })
-                    } else {
-                        // idToken is null, the firebase auth provider probably hasn't set it yet. We don't want to do any fetching until we have it
+            let token: string | null = '';
+            try {
+                await SecureStore.getItemAsync('firebase_idToken').then((idToken) => { token = idToken })
+            }
+            catch (e) {
+
+            }
+
+            if (token !== null) {
+                try {
+                    await axios.post<Message[]>(`${API_ENDPOINT}/get-conversation-messages`, {
+                        idToken: token,
+                        thread_id: route.params.thread_id
+                    }).then((res) => {
+                        setMessages(res.data);
                         setFetching(false);
-                    }
-                })
+                    })
+                }
+                catch (e) {
+
+                }
+
+            }
         }
     }
 
@@ -93,29 +100,59 @@ export default function Conversation({ navigation, route }: { navigation: any, r
     }
 
     return (
-        <SafeAreaView style={styles.content}>
-            <View style={styles.topBar}>
-                <Ionicons name={'chevron-back-outline'} onPress={goBack} style={{ marginRight: 15 }} size={25} />
-                <Text style={styles.username}>{route.params.username}</Text>
-            </View>
-            <ScrollView ref={scrollRef} onLayout={scrollViewToBottom} onContentSizeChange={scrollViewToBottom}>
-                {
-                    messages.length > 0 &&
-                    messages.map((message) => (
-                        <View key={message.message_id} style={styles.messageRow}>
-                            <Text style={styles.messageFrom}>{message.from}</Text>
-                            <Text style={styles.messageText}>{message.message}</Text>
-                        </View>
-                    ))
-                }
-            </ScrollView>
-            <View style={styles.bottomBar}>
-                <TextInput value={input} onChangeText={(text) => { setInput(text) }} placeholder='Send a message' style={styles.textField} />
-                <Pressable style={styles.sendBtn} onPress={sendMessage}>
-                    <Ionicons name={'send'} size={15} style={styles.sendBtnText} />
-                </Pressable>
-            </View>
-        </SafeAreaView>
+        <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={styles.content}>
+            <SafeAreaView style={styles.content}>
+                <View style={styles.topBar}>
+                    <Ionicons name={'chevron-back-outline'} onPress={goBack} style={{ marginRight: 15 }} size={25} />
+                    <Text style={styles.username}>{route.params.username}</Text>
+                </View>
+                <ScrollView ref={scrollRef} onLayout={scrollViewToBottom} onContentSizeChange={scrollViewToBottom}>
+                    {
+                        messages.length > 0 &&
+                        messages.map((message) => (
+                            <View key={message.message_id} style={styles.messageRow}>
+                                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                    <Text style={styles.messageFrom}>{message.from}</Text>
+                                    <Text style={styles.messageAge}>
+                                        {
+                                            message.message_age == 0 &&
+                                            `just now`
+                                        }
+                                        {
+                                            message.message_age >= 1 && message.message_age <= 59 &&
+                                            `${message.message_age} minutes ago`
+                                        }
+                                        {
+                                            // 1 hour
+                                            message.message_age >= 60 && message.message_age <= 119 &&
+                                            `${Math.floor(message.message_age / 60)} hour ago`
+                                        }
+                                        {
+                                            // Multiple hours
+                                            message.message_age >= 120 && message.message_age <= 1339 &&
+                                            `${Math.floor(message.message_age / 60)} hours ago`
+                                        }
+                                        {
+                                            // More than a day
+                                            message.message_age >= 1440 &&
+                                            `${Math.floor(message.message_age / 1440)} days ago`
+                                        }
+                                    </Text>
+                                </View>
+
+                                <Text style={styles.messageText}>{message.message}</Text>
+                            </View>
+                        ))
+                    }
+                </ScrollView>
+                <View style={styles.bottomBar}>
+                    <TextInput value={input} onChangeText={(text) => { setInput(text) }} placeholder='Send a message' style={styles.textField} />
+                    <Pressable style={styles.sendBtn} onPress={sendMessage}>
+                        <Ionicons name={'send'} size={15} style={styles.sendBtnText} />
+                    </Pressable>
+                </View>
+            </SafeAreaView>
+        </KeyboardAvoidingView>
     )
 }
 
@@ -130,7 +167,7 @@ const styles = StyleSheet.create({
         paddingVertical: 10,
         paddingHorizontal: 15,
         flexDirection: 'row',
-        alignItems: 'center'
+        alignItems: 'center',
     },
     username: {
         fontSize: Theme.fontSizes.normal,
@@ -171,10 +208,23 @@ const styles = StyleSheet.create({
         paddingHorizontal: 15
     },
     messageFrom: {
-        fontWeight: 'bold'
+        fontWeight: 'bold',
+        marginRight: 5,
+        fontSize: Theme.fontSizes.small
+    },
+    messageAge: {
+        color: Theme.colors.grey,
+        fontSize: Theme.fontSizes.xsmall
     },
     messageText: {
-        color: Theme.colors.black
+        color: Theme.colors.black,
+        fontSize: Theme.fontSizes.normal,
+        backgroundColor: '#F8F8F8',
+        paddingHorizontal: 10,
+        paddingVertical: 10,
+        borderRadius: 25,
+        alignSelf: 'flex-start',
+        marginTop: 5
     }
 
 });

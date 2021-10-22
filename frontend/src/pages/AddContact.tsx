@@ -1,10 +1,11 @@
 import React, { useState } from 'react'
-import { Text, StyleSheet, Pressable, TextInput } from 'react-native';
+import { Text, StyleSheet, Pressable, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Theme } from '../Theme';
+import { Theme } from '../components/Theme';
 import * as SecureStore from 'expo-secure-store'
 import axios from 'axios';
-import { API_ENDPOINT } from '../EnvironmentVariables';
+import { API_ENDPOINT } from '../components/EnvironmentVariables';
+import Ionicons from '@expo/vector-icons/Ionicons';
 
 interface addContactResults {
     error: boolean,
@@ -36,9 +37,16 @@ export default function AddContact({ navigation }: { navigation: any }) {
             })
     }
 
+    const goBack = () => {
+        navigation.navigate('Contacts');
+    }
+
     return (
         <SafeAreaView style={styles.content}>
-            <Text style={styles.header}>Add Contact</Text>
+            <View style={styles.topBar}>
+                <Ionicons name={'chevron-back-outline'} onPress={goBack} style={{ marginRight: 15 }} size={25} />
+                <Text style={Theme.header}>Add Contact</Text>
+            </View>
 
             <TextInput autoCapitalize={'none'} onChangeText={(text) => { setContactUsername(text) }} style={styles.input} placeholder="Enter username" />
 
@@ -52,25 +60,34 @@ export default function AddContact({ navigation }: { navigation: any }) {
 const styles = StyleSheet.create({
     content: {
         flex: 1,
-        backgroundColor: Theme.colors.white,
-        padding: 15
+        backgroundColor: Theme.colors.white
     },
-    header: {
-        fontSize: Theme.fontSizes.medium,
-        paddingBottom: 10
+    topBar: {
+        borderBottomWidth: 0.25,
+        borderBottomColor: Theme.colors.lightgrey,
+        paddingVertical: 10,
+        paddingHorizontal: 15,
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    pageName: {
+        fontSize: Theme.fontSizes.normal,
+        color: Theme.colors.black
     },
     input: {
         backgroundColor: '#f5f5f5',
         fontSize: Theme.fontSizes.normal,
         paddingVertical: 5,
         paddingHorizontal: 15,
-        borderRadius: 25
+        borderRadius: 25,
+        marginVertical: 15,
+        marginHorizontal: 15
     },
     addContact: {
         backgroundColor: Theme.colors.mediumblue,
         padding: 10,
         borderRadius: 25,
-        marginVertical: 10
+        marginHorizontal: 15
     },
     btnText: {
         color: Theme.colors.white,

@@ -1,7 +1,7 @@
 import React from "react";
 import { Text, StyleSheet, View, Pressable, Image } from "react-native";
-import Center from "./Center";
-import { Theme } from "./Theme";
+import Center from "../components/Center";
+import { Theme } from "../components/Theme";
 import { useFocusEffect } from "@react-navigation/core";
 import * as SecureStore from 'expo-secure-store';
 

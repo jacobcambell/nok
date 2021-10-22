@@ -1,8 +1,8 @@
 import React, { useState, useContext } from 'react';
 import { Pressable, StyleSheet, Text, View, Image } from "react-native";
 import { TextInput } from 'react-native-gesture-handler';
-import Center from '../Center';
-import { Theme } from '../Theme';
+import Center from '../components/Center';
+import { Theme } from '../components/Theme';
 import * as SecureStore from 'expo-secure-store';
 import { useFocusEffect } from '@react-navigation/core';
 import { AuthContext } from '../contexts/AuthContext';
@@ -101,7 +101,7 @@ const styles = StyleSheet.create({
         fontSize: Theme.fontSizes.normal
     },
     smallLink: {
-        color: Theme.colors.white,
+        color: Theme.colors.mediumblue,
         fontSize: Theme.fontSizes.normal,
         marginVertical: 15,
         paddingVertical: 5,
