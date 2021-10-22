@@ -530,6 +530,7 @@ app.post('/get-conversation-messages', async (req: Express.Request, res: Express
         con.query(`SELECT
                             messages.id AS message_id,
                             messages.message,
+                            TIMESTAMPDIFF(MINUTE, messages.send_time, NOW()) as message_age,
                             users.username
                             FROM messages, message_threads, users
                             WHERE
@@ -545,12 +546,13 @@ app.post('/get-conversation-messages', async (req: Express.Request, res: Express
                 message_id: number;
                 from: string;
                 message: string;
+                message_age: string;
             }
 
             let messages: Message[] = [];
 
             for (let i = 0; i < results.length; i++) {
-                messages.push({ message_id: results[i].message_id, from: results[i].username, message: results[i].message });
+                messages.push({ message_id: results[i].message_id, from: results[i].username, message: results[i].message, message_age: results[i].message_age });
             }
 
             // Update the read status for this user/thread combo
