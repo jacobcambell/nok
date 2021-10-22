@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useFocusEffect } from '@react-navigation/core'
-import { Text, StyleSheet, View, ScrollView, Pressable, TextInput } from 'react-native'
+import { Text, StyleSheet, View, ScrollView, Pressable, TextInput, KeyboardAvoidingView } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { Theme } from '../components/Theme'
 import { API_ENDPOINT } from '../components/EnvironmentVariables'
@@ -93,29 +93,31 @@ export default function Conversation({ navigation, route }: { navigation: any, r
     }
 
     return (
-        <SafeAreaView style={styles.content}>
-            <View style={styles.topBar}>
-                <Ionicons name={'chevron-back-outline'} onPress={goBack} style={{ marginRight: 15 }} size={25} />
-                <Text style={styles.username}>{route.params.username}</Text>
-            </View>
-            <ScrollView ref={scrollRef} onLayout={scrollViewToBottom} onContentSizeChange={scrollViewToBottom}>
-                {
-                    messages.length > 0 &&
-                    messages.map((message) => (
-                        <View key={message.message_id} style={styles.messageRow}>
-                            <Text style={styles.messageFrom}>{message.from}</Text>
-                            <Text style={styles.messageText}>{message.message}</Text>
-                        </View>
-                    ))
-                }
-            </ScrollView>
-            <View style={styles.bottomBar}>
-                <TextInput value={input} onChangeText={(text) => { setInput(text) }} placeholder='Send a message' style={styles.textField} />
-                <Pressable style={styles.sendBtn} onPress={sendMessage}>
-                    <Ionicons name={'send'} size={15} style={styles.sendBtnText} />
-                </Pressable>
-            </View>
-        </SafeAreaView>
+        <KeyboardAvoidingView behavior='padding' style={styles.content}>
+            <SafeAreaView style={styles.content}>
+                <View style={styles.topBar}>
+                    <Ionicons name={'chevron-back-outline'} onPress={goBack} style={{ marginRight: 15 }} size={25} />
+                    <Text style={styles.username}>{route.params.username}</Text>
+                </View>
+                <ScrollView ref={scrollRef} onLayout={scrollViewToBottom} onContentSizeChange={scrollViewToBottom} style={{ backgroundColor: 'red' }}>
+                    {
+                        messages.length > 0 &&
+                        messages.map((message) => (
+                            <View key={message.message_id} style={styles.messageRow}>
+                                <Text style={styles.messageFrom}>{message.from}</Text>
+                                <Text style={styles.messageText}>{message.message}</Text>
+                            </View>
+                        ))
+                    }
+                </ScrollView>
+                <View style={styles.bottomBar}>
+                    <TextInput value={input} onChangeText={(text) => { setInput(text) }} placeholder='Send a message' style={styles.textField} />
+                    <Pressable style={styles.sendBtn} onPress={sendMessage}>
+                        <Ionicons name={'send'} size={15} style={styles.sendBtnText} />
+                    </Pressable>
+                </View>
+            </SafeAreaView>
+        </KeyboardAvoidingView>
     )
 }
 
@@ -130,7 +132,7 @@ const styles = StyleSheet.create({
         paddingVertical: 10,
         paddingHorizontal: 15,
         flexDirection: 'row',
-        alignItems: 'center'
+        alignItems: 'center',
     },
     username: {
         fontSize: Theme.fontSizes.normal,
