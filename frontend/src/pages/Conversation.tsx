@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useFocusEffect } from '@react-navigation/core'
-import { Text, StyleSheet, View, ScrollView, Pressable, TextInput, KeyboardAvoidingView } from 'react-native'
+import { Text, StyleSheet, View, ScrollView, Pressable, TextInput, KeyboardAvoidingView, Platform } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { Theme } from '../components/Theme'
 import { API_ENDPOINT } from '../components/EnvironmentVariables'
@@ -93,7 +93,7 @@ export default function Conversation({ navigation, route }: { navigation: any, r
     }
 
     return (
-        <KeyboardAvoidingView behavior='padding' style={styles.content}>
+        <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={styles.content}>
             <SafeAreaView style={styles.content}>
                 <View style={styles.topBar}>
                     <Ionicons name={'chevron-back-outline'} onPress={goBack} style={{ marginRight: 15 }} size={25} />
