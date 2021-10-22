@@ -37,27 +37,33 @@ export default function Conversation({ navigation, route }: { navigation: any, r
         navigation.navigate('Chat');
     }
 
-    const loadMessages = () => {
+    const loadMessages = async () => {
         if (!fetching) {
             setFetching(true);
 
-            SecureStore.getItemAsync('firebase_idToken')
-                .then((idToken) => {
-                    if (idToken !== null) {
-                        axios.post<Message[]>(`${API_ENDPOINT}/get-conversation-messages`, {
-                            idToken,
-                            thread_id: route.params.thread_id
-                        })
-                            .then((res) => {
-                                setMessages(res.data);
-                                setFetching(false);
-                            })
-                            .catch((err) => { })
-                    } else {
-                        // idToken is null, the firebase auth provider probably hasn't set it yet. We don't want to do any fetching until we have it
+            let token: string | null = '';
+            try {
+                await SecureStore.getItemAsync('firebase_idToken').then((idToken) => { token = idToken })
+            }
+            catch (e) {
+
+            }
+
+            if (token !== null) {
+                try {
+                    await axios.post<Message[]>(`${API_ENDPOINT}/get-conversation-messages`, {
+                        idToken: token,
+                        thread_id: route.params.thread_id
+                    }).then((res) => {
+                        setMessages(res.data);
                         setFetching(false);
-                    }
-                })
+                    })
+                }
+                catch (e) {
+
+                }
+
+            }
         }
     }
 
