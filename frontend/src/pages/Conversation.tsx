@@ -99,7 +99,7 @@ export default function Conversation({ navigation, route }: { navigation: any, r
                     <Ionicons name={'chevron-back-outline'} onPress={goBack} style={{ marginRight: 15 }} size={25} />
                     <Text style={styles.username}>{route.params.username}</Text>
                 </View>
-                <ScrollView ref={scrollRef} onLayout={scrollViewToBottom} onContentSizeChange={scrollViewToBottom} style={{ backgroundColor: 'red' }}>
+                <ScrollView ref={scrollRef} onLayout={scrollViewToBottom} onContentSizeChange={scrollViewToBottom}>
                     {
                         messages.length > 0 &&
                         messages.map((message) => (
