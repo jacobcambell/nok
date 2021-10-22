@@ -95,7 +95,7 @@ const styles = StyleSheet.create({
         fontSize: Theme.fontSizes.normal
     },
     smallLink: {
-        color: Theme.colors.white,
+        color: Theme.colors.mediumblue,
         fontSize: Theme.fontSizes.normal,
         marginVertical: 15,
         paddingVertical: 5,
