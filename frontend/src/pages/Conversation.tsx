@@ -209,14 +209,22 @@ const styles = StyleSheet.create({
     },
     messageFrom: {
         fontWeight: 'bold',
-        marginRight: 5
+        marginRight: 5,
+        fontSize: Theme.fontSizes.small
     },
     messageAge: {
         color: Theme.colors.grey,
         fontSize: Theme.fontSizes.xsmall
     },
     messageText: {
-        color: Theme.colors.black
+        color: Theme.colors.black,
+        fontSize: Theme.fontSizes.normal,
+        backgroundColor: '#F8F8F8',
+        paddingHorizontal: 10,
+        paddingVertical: 10,
+        borderRadius: 25,
+        alignSelf: 'flex-start',
+        marginTop: 5
     }
 
 });
