@@ -1,4 +1,5 @@
 require('dotenv').config();
+import axios from 'axios';
 import Express from 'express';
 import * as firebaseAdmin from 'firebase-admin';
 import mysql from 'mysql';
@@ -604,8 +605,8 @@ app.post('/send-message', async (req: Express.Request, res: Express.Response) =>
         return;
     }
 
-    // Get this user's id from their firebase uid
-    con.query('SELECT users.id FROM users WHERE users.firebase_uid=?', [uid], (err, results) => {
+    // Get this user's id, username from their firebase uid
+    con.query('SELECT users.id, users.username FROM users WHERE users.firebase_uid=?', [uid], (err, results) => {
         if (err) throw err;
 
         if (results.length === 0) {
@@ -615,6 +616,7 @@ app.post('/send-message', async (req: Express.Request, res: Express.Response) =>
         }
 
         const user_id = results[0].id;
+        const users_username = results[0].username;
 
         // Check if this user is a member of the requested thread
         con.query(`SELECT
@@ -643,6 +645,31 @@ app.post('/send-message', async (req: Express.Request, res: Express.Response) =>
                     res.sendStatus(200);
                     return;
                 });
+
+                // We want to grab the expoPushToken for the recipient (if there is one), and send them a push notification
+                con.query(`SELECT
+                            users.expoPushToken
+                            FROM users, message_threads
+                            WHERE
+                            (users.id=message_threads.user1 OR users.id=message_threads.user2) AND
+                            message_threads.id=? AND
+                            users.id!=?
+                `, [req.body.thread_id, user_id], (err, results) => {
+                    if (err) throw err;
+
+                    // If null, it means the recipient user does not have a expoPushToken and we will just ignore sending a notification
+                    if (results[0].expoPushToken !== null) {
+                        const message = {
+                            to: results[0].expoPushToken,
+                            sound: 'default',
+                            title: users_username,
+                            body: req.body.message,
+                            // data: { someData: 'goes here' },
+                        };
+
+                        axios.post('https://exp.host/--/api/v2/push/send', message).catch(e => { })
+                    }
+                })
             });
         })
     })
