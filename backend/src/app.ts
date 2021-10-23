@@ -26,7 +26,8 @@ con.connect();
 app.post('/ping', async (req: Express.Request, res: Express.Response) => {
     // User will send their firebase idToken every time they render the Main component
     const check = [
-        req.body.idToken
+        req.body.idToken,
+        // req.body.expoPushToken -- Optional
     ];
 
     if (check.includes(undefined) || check.includes(null)) {
@@ -68,6 +69,15 @@ app.post('/ping', async (req: Express.Request, res: Express.Response) => {
         }
         else {
             // This uid already exists in our users table
+
+            // If they sent a expoPushToken, we want to assign it to them so they can receive push notifications
+            // Notice that we will update this value with anything the user sends, so if they log in with a new device it will get
+            // updated to send notifications to their most recent device
+            if (typeof req.body.expoPushToken !== 'undefined') {
+                con.query('UPDATE users SET expoPushToken=? WHERE firebase_uid=?', [req.body.expoPushToken, uid], (err, results) => {
+                    if (err) throw err;
+                })
+            }
         }
 
         res.sendStatus(200);
