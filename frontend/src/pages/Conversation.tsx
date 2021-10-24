@@ -20,7 +20,6 @@ export default function Conversation({ navigation, route }: { navigation: any, r
 
     const [input, setInput] = useState<string>('');
     const [messages, setMessages] = useState<Message[]>([]);
-    const [fetching, setFetching] = useState<boolean>(false);
 
     useFocusEffect(
         React.useCallback(() => {
@@ -35,10 +34,15 @@ export default function Conversation({ navigation, route }: { navigation: any, r
                 loadMessages();
             })
 
+            socket.on('return-conversation-messages', (data: Message[]) => {
+                setMessages(data);
+            })
+
             // Cleanup
             return (() => {
                 socket.off('send-message-success')
                 socket.off('client-new-message')
+                socket.off('return-conversation-messages')
             })
         }, [])
     );
@@ -48,33 +52,20 @@ export default function Conversation({ navigation, route }: { navigation: any, r
     }
 
     const loadMessages = async () => {
-        if (!fetching) {
-            setFetching(true);
-
-            let token: string | null = '';
-            try {
-                await SecureStore.getItemAsync('firebase_idToken').then((idToken) => { token = idToken })
-            }
-            catch (e) {
-
-            }
-
-            if (token !== null) {
-                try {
-                    await axios.post<Message[]>(`${API_ENDPOINT}/get-conversation-messages`, {
-                        idToken: token,
-                        thread_id: route.params.thread_id
-                    }).then((res) => {
-                        setMessages(res.data);
-                        setFetching(false);
-                    })
-                }
-                catch (e) {
-
-                }
-
-            }
+        let token: string | null = '';
+        try {
+            await SecureStore.getItemAsync('firebase_idToken').then((idToken) => { token = idToken })
         }
+        catch (e) {
+        }
+
+        if (token !== null) {
+            socket.emit('get-conversation-messages', {
+                idToken: token,
+                thread_id: route.params.thread_id
+            })
+        }
+
     }
 
     useEffect(() => {
