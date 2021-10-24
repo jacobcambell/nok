@@ -303,6 +303,114 @@ io.on("connection", (socket) => {
         })
     })
 
+    socket.on('send-message', async (data) => {
+        const check = [
+            data.idToken,
+            data.thread_id,
+            data.message
+        ];
+
+        if (check.includes(undefined) || check.includes(null)) {
+            return;
+        }
+
+        // Message length
+        if (typeof data.message !== 'string' || data.message.length <= 0 || data.message.length >= 999) {
+            return;
+        }
+
+        let uid: string = '';
+
+        try {
+            await firebaseAdmin.auth().verifyIdToken(data.idToken).then(decodedToken => { uid = decodedToken.uid })
+        }
+        catch (e) {
+            return;
+        }
+
+        // Get this user's id, username from their firebase uid
+        con.query('SELECT users.id, users.username FROM users WHERE users.firebase_uid=?', [uid], (err, results) => {
+            if (err) throw err;
+
+            if (results.length === 0) {
+                // For some reason there is no user id matching that firebase uid
+                return;
+            }
+
+            const user_id = results[0].id;
+            const users_username = results[0].username;
+
+            // Check if this user is a member of the requested thread
+            con.query(`SELECT
+                                COUNT(*) as C from
+                                message_threads
+                                WHERE
+                                (message_threads.user1=? OR message_threads.user2=?) AND
+                                message_threads.id=?
+                                `, [user_id, user_id, data.thread_id], (err, results) => {
+                if (err) throw err;
+
+                if (results[0].c === 0) {
+                    // User does not belong to the requested thread
+                    return;
+                }
+
+                // User belongs to requested thread, add message
+                con.query(`INSERT INTO messages (thread_id, from_user, send_time, message) VALUES (?, ?, NOW(), ?)`, [data.thread_id, user_id, data.message], (err, results) => {
+                    if (err) throw err;
+
+                    // Update read status for other user
+                    con.query('UPDATE message_thread_readstatus SET is_read=0 WHERE thread_id=? AND user_id!=?', [data.thread_id, user_id], (err, results) => {
+                        if (err) throw err;
+
+                        socket.emit('send-message-success')
+
+                        // Broadcast message to recipient
+                        // Get the recipient's firebase uid
+                        con.query(`SELECT
+                                    users.firebase_uid
+                                    FROM users, message_threads
+                                    WHERE (message_threads.user1=users.id OR message_threads.user2=users.id) AND
+                                    users.id!=? AND
+                                    message_threads.id=?
+                                    `, [user_id, data.thread_id], (err, results) => {
+                            if (err) throw err;
+
+                            // Send both events to the user's room
+                            socket.to(results[0].firebase_uid).emit('client-new-message-threads')
+                            socket.to(results[0].firebase_uid).emit('client-new-message')
+                        })
+                    });
+
+                    // We want to grab the expoPushToken for the recipient (if there is one), and send them a push notification
+                    con.query(`SELECT
+                                users.expoPushToken
+                                FROM users, message_threads
+                                WHERE
+                                (users.id=message_threads.user1 OR users.id=message_threads.user2) AND
+                                message_threads.id=? AND
+                                users.id!=?
+                    `, [data.thread_id, user_id], (err, results) => {
+                        if (err) throw err;
+
+                        // If null, it means the recipient user does not have a expoPushToken and we will just ignore sending a notification
+                        if (results[0].expoPushToken !== null) {
+                            const message = {
+                                to: results[0].expoPushToken,
+                                sound: 'default',
+                                title: users_username,
+                                body: data.message,
+                                // data: { someData: 'goes here' },
+                            };
+
+                            axios.post('https://exp.host/--/api/v2/push/send', message).catch(e => { })
+                        }
+                    })
+                });
+            })
+        })
+    })
+
 
 });
 
@@ -579,104 +687,6 @@ app.post('/get-conversation-messages', async (req: Express.Request, res: Express
             return;
         })
     });
-})
-
-app.post('/send-message', async (req: Express.Request, res: Express.Response) => {
-    const check = [
-        req.body.idToken,
-        req.body.thread_id,
-        req.body.message
-    ];
-
-    if (check.includes(undefined) || check.includes(null)) {
-        res.sendStatus(400)
-        return;
-    }
-
-    // Message length
-    if (typeof req.body.message !== 'string' || req.body.message.length <= 0 || req.body.message.length >= 999) {
-        res.sendStatus(400);
-        return;
-    }
-
-    let uid: string = '';
-
-    try {
-        await firebaseAdmin.auth().verifyIdToken(req.body.idToken).then(decodedToken => { uid = decodedToken.uid })
-    }
-    catch (e) {
-        res.sendStatus(400);
-        return;
-    }
-
-    // Get this user's id, username from their firebase uid
-    con.query('SELECT users.id, users.username FROM users WHERE users.firebase_uid=?', [uid], (err, results) => {
-        if (err) throw err;
-
-        if (results.length === 0) {
-            // For some reason there is no user id matching that firebase uid
-            res.sendStatus(400);
-            return;
-        }
-
-        const user_id = results[0].id;
-        const users_username = results[0].username;
-
-        // Check if this user is a member of the requested thread
-        con.query(`SELECT
-                            COUNT(*) as C from
-                            message_threads
-                            WHERE
-                            (message_threads.user1=? OR message_threads.user2=?) AND
-                            message_threads.id=?
-                            `, [user_id, user_id, req.body.thread_id], (err, results) => {
-            if (err) throw err;
-
-            if (results[0].c === 0) {
-                // User does not belong to the requested thread
-                res.sendStatus(400);
-                return;
-            }
-
-            // User belongs to requested thread, add message
-            con.query(`INSERT INTO messages (thread_id, from_user, send_time, message) VALUES (?, ?, NOW(), ?)`, [req.body.thread_id, user_id, req.body.message], (err, results) => {
-                if (err) throw err;
-
-                // Update read status for other user
-                con.query('UPDATE message_thread_readstatus SET is_read=0 WHERE thread_id=? AND user_id!=?', [req.body.thread_id, user_id], (err, results) => {
-                    if (err) throw err;
-
-                    res.sendStatus(200);
-                    return;
-                });
-
-                // We want to grab the expoPushToken for the recipient (if there is one), and send them a push notification
-                con.query(`SELECT
-                            users.expoPushToken
-                            FROM users, message_threads
-                            WHERE
-                            (users.id=message_threads.user1 OR users.id=message_threads.user2) AND
-                            message_threads.id=? AND
-                            users.id!=?
-                `, [req.body.thread_id, user_id], (err, results) => {
-                    if (err) throw err;
-
-                    // If null, it means the recipient user does not have a expoPushToken and we will just ignore sending a notification
-                    if (results[0].expoPushToken !== null) {
-                        const message = {
-                            to: results[0].expoPushToken,
-                            sound: 'default',
-                            title: users_username,
-                            body: req.body.message,
-                            // data: { someData: 'goes here' },
-                        };
-
-                        axios.post('https://exp.host/--/api/v2/push/send', message).catch(e => { })
-                    }
-                })
-            });
-        })
-    })
 })
 
 app.post('/change-username', async (req: Express.Request, res: Express.Response) => {

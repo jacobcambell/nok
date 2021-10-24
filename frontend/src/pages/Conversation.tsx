@@ -7,6 +7,7 @@ import { API_ENDPOINT } from '../components/EnvironmentVariables'
 import * as SecureStore from 'expo-secure-store';
 import axios from 'axios';
 import Ionicons from '@expo/vector-icons/Ionicons';
+import { socket } from '../components/Socket'
 
 interface Message {
     message_id: number;
@@ -23,14 +24,22 @@ export default function Conversation({ navigation, route }: { navigation: any, r
 
     useFocusEffect(
         React.useCallback(() => {
-            // Schedule API call to get message threads every 5 seconds (also call immediately)
             loadMessages();
-            const checkInterval = setInterval(() => {
-                loadMessages();
-            }, 5000)
 
-            // Clear the interval when this component loses focus
-            return () => clearInterval(checkInterval);
+            socket.on('send-message-success', () => {
+                loadMessages();
+                setInput('');
+            })
+
+            socket.on('client-new-message', () => {
+                loadMessages();
+            })
+
+            // Cleanup
+            return (() => {
+                socket.off('send-message-success')
+                socket.off('client-new-message')
+            })
         }, [])
     );
 
@@ -85,17 +94,11 @@ export default function Conversation({ navigation, route }: { navigation: any, r
 
         SecureStore.getItemAsync('firebase_idToken')
             .then((idToken) => {
-                axios.post(`${API_ENDPOINT}/send-message`, {
+                socket.emit('send-message', {
                     idToken,
                     thread_id: route.params.thread_id,
                     message: input
                 })
-                    .then(() => {
-                        // Manually call loadMessages
-                        loadMessages();
-                        setInput('');
-                    })
-                    .catch((err) => { alert(err) })
             })
     }
 

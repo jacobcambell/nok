@@ -25,8 +25,7 @@ export default function Chat({ navigation }: { navigation: any }) {
         React.useCallback(() => {
             loadThreads();
 
-            socket.on('client-new-message', (data) => {
-                console.log('new message notify')
+            socket.on('client-new-message-threads', () => {
                 loadThreads();
             })
 
@@ -36,7 +35,7 @@ export default function Chat({ navigation }: { navigation: any }) {
 
             // Cleanup
             return (() => {
-                socket.off('client-new-message')
+                socket.off('client-new-message-threads')
                 socket.off('return-message-threads')
             })
         }, [])
