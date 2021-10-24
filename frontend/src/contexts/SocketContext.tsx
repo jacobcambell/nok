@@ -15,6 +15,12 @@ export default function SocketProvider({ children }) {
         socket.on('disconnect', () => {
             setConnected(false);
         })
+
+        // Cleanup
+        return (() => {
+            socket.off('connect')
+            socket.off('disconnect')
+        })
     }, []);
 
     return (
