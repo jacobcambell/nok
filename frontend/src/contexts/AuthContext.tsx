@@ -5,6 +5,7 @@ import * as SecureStore from 'expo-secure-store';
 import * as Notifications from 'expo-notifications'
 import axios from 'axios';
 import { API_ENDPOINT } from '../components/EnvironmentVariables';
+import { socket } from '../components/Socket';
 
 const firebaseApp = initializeApp({
     apiKey: "AIzaSyAnQ4G4n0kigRIap659em1tB3HnLUiL2I8",
@@ -28,12 +29,7 @@ export default function AuthProvider({ children }: { children: any }) {
                     SecureStore.setItemAsync('firebase_idToken', token);
 
                     registerForPushNotificationsAsync().then((expoPushToken) => {
-                        // Ping the api with the user's idToken
-                        axios.post(`${API_ENDPOINT}/ping`, {
-                            idToken: token,
-                            expoPushToken
-                        })
-                            .catch((err) => { })
+                        socket.emit('ping', { idToken: token, expoPushToken });
                     })
                 })
         });
