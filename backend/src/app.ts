@@ -196,6 +196,113 @@ io.on("connection", (socket) => {
         // TODO - unsubscribe users from rooms on disconnect
     })
 
+    socket.on('get-message-threads', async (data) => {
+        const check = [
+            data.idToken
+        ];
+
+        if (check.includes(undefined) || check.includes(null)) {
+            return;
+        }
+
+        let uid: string = '';
+
+        try {
+            await firebaseAdmin.auth().verifyIdToken(data.idToken).then(decodedToken => { uid = decodedToken.uid })
+        }
+        catch (e) {
+            return;
+        }
+
+        // Get this user's id from their firebase uid
+        con.query('SELECT users.id FROM users WHERE users.firebase_uid=?', [uid], (err, results) => {
+            if (err) throw err;
+
+            if (results.length === 0) {
+                // For some reason there is no user id matching that firebase uid
+                return;
+            }
+
+            const user_id = results[0].id;
+
+            // Load all the message threads this user is a member of
+            con.query(`SELECT
+                                message_threads.id,
+                                users.username
+                                FROM
+                                message_threads, users
+                                WHERE
+                                (message_threads.user1 = ? OR message_threads.user2 = ?) AND
+                                (message_threads.user1 = users.id OR message_threads.user2 = users.id) AND
+                                users.id!=?
+                    `, [user_id, user_id, user_id], (err, results) => {
+                if (err) throw err;
+
+                interface MessageThread {
+                    id: number;
+                    username: string;
+                    msg_preview: string;
+                    is_read: boolean;
+                }
+
+                let message_threads: MessageThread[] = [];
+
+                // Loop through all the message threads we got from the database and add them to the array along with the msg_preview
+                let i = 0;
+                let size = results.length;
+
+                // Check if user has no message threads
+                if (size === 0) {
+                    socket.emit('return-message-threads', message_threads)
+                    return;
+                }
+
+                messageLoop();
+                function messageLoop() {
+                    let thread_id = results[i].id;
+                    let username = results[i].username;
+
+                    // For each message thread, we want to load the last message from that thread
+                    con.query(`SELECT
+                                        messages.message,
+                                        message_thread_readstatus.is_read
+                                        FROM messages, message_threads, message_thread_readstatus
+                                        WHERE messages.thread_id=message_threads.id AND
+                                        message_threads.id=? AND
+                                        message_threads.id=message_thread_readstatus.thread_id AND
+                                        message_thread_readstatus.user_id=?
+                                        ORDER BY messages.send_time DESC LIMIT 1
+                                        `, [thread_id, user_id], (err, results) => {
+                        if (err) throw err;
+
+                        let last_message = '(No messages)';
+                        let is_read = true;
+
+                        if (results.length !== 0) {
+                            if (results[0].message.length > 40) {
+                                last_message = results[0].message.substring(0, 40) + '...';
+                            }
+                            else {
+                                last_message = results[0].message;
+                            }
+
+                            is_read = results[0].is_read;
+                        }
+
+                        message_threads.push({ id: thread_id, username: username, msg_preview: last_message, is_read: is_read });
+
+                        i++;
+                        if (i < size) {
+                            messageLoop();
+                        } else {
+                            socket.emit('return-message-threads', message_threads)
+                        }
+                    });
+                }
+            });
+        })
+    })
+
 
 });
 
@@ -399,116 +506,6 @@ app.post('/process-contact', async (req: Express.Request, res: Express.Response)
             if (err) throw err;
         });
     }
-})
-
-app.post('/get-message-threads', async (req: Express.Request, res: Express.Response) => {
-    const check = [
-        req.body.idToken
-    ];
-
-    if (check.includes(undefined) || check.includes(null)) {
-        res.sendStatus(400);
-        return;
-    }
-
-    let uid: string = '';
-
-    try {
-        await firebaseAdmin.auth().verifyIdToken(req.body.idToken).then(decodedToken => { uid = decodedToken.uid })
-    }
-    catch (e) {
-        res.sendStatus(400);
-        return;
-    }
-
-    // Get this user's id from their firebase uid
-    con.query('SELECT users.id FROM users WHERE users.firebase_uid=?', [uid], (err, results) => {
-        if (err) throw err;
-
-        if (results.length === 0) {
-            // For some reason there is no user id matching that firebase uid
-            res.sendStatus(400);
-            return;
-        }
-
-        const user_id = results[0].id;
-
-        // Load all the message threads this user is a member of
-        con.query(`SELECT
-                            message_threads.id,
-                            users.username
-                            FROM
-                            message_threads, users
-                            WHERE
-                            (message_threads.user1 = ? OR message_threads.user2 = ?) AND
-                            (message_threads.user1 = users.id OR message_threads.user2 = users.id) AND
-                            users.id!=?
-                `, [user_id, user_id, user_id], (err, results) => {
-            if (err) throw err;
-
-            interface MessageThread {
-                id: number;
-                username: string;
-                msg_preview: string;
-                is_read: boolean;
-            }
-
-            let message_threads: MessageThread[] = [];
-
-            // Loop through all the message threads we got from the database and add them to the array along with the msg_preview
-            let i = 0;
-            let size = results.length;
-
-            // Check if user has no message threads
-            if (size === 0) {
-                res.json(message_threads);
-                return;
-            }
-
-            messageLoop();
-            function messageLoop() {
-                let thread_id = results[i].id;
-                let username = results[i].username;
-
-                // For each message thread, we want to load the last message from that thread
-                con.query(`SELECT
-                                    messages.message,
-                                    message_thread_readstatus.is_read
-                                    FROM messages, message_threads, message_thread_readstatus
-                                    WHERE messages.thread_id=message_threads.id AND
-                                    message_threads.id=? AND
-                                    message_threads.id=message_thread_readstatus.thread_id AND
-                                    message_thread_readstatus.user_id=?
-                                    ORDER BY messages.send_time DESC LIMIT 1
-                                    `, [thread_id, user_id], (err, results) => {
-                    if (err) throw err;
-
-                    let last_message = '(No messages)';
-                    let is_read = true;
-
-                    if (results.length !== 0) {
-                        if (results[0].message.length > 40) {
-                            last_message = results[0].message.substring(0, 40) + '...';
-                        }
-                        else {
-                            last_message = results[0].message;
-                        }
-
-                        is_read = results[0].is_read;
-                    }
-
-                    message_threads.push({ id: thread_id, username: username, msg_preview: last_message, is_read: is_read });
-
-                    i++;
-                    if (i < size) {
-                        messageLoop();
-                    } else {
-                        res.json(message_threads);
-                    }
-                });
-            }
-        });
-    })
 })
 
 app.post('/get-conversation-messages', async (req: Express.Request, res: Express.Response) => {
