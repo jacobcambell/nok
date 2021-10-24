@@ -1,5 +1,5 @@
 import React, { createContext, useEffect, useState } from 'react';
-import { SafeAreaView, Text, View } from 'react-native';
+import { SafeAreaView, Text } from 'react-native';
 import { socket } from '../components/Socket';
 
 export const SocketContext = createContext<any>(null);
@@ -27,7 +27,7 @@ export default function SocketProvider({ children }) {
 const Loading = () => {
     return (
         <SafeAreaView style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-            <Text>Trying to connect to socket...</Text>
+            <Text>Trying to connect...</Text>
         </SafeAreaView>
     );
 }
