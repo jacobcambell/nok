@@ -6,8 +6,7 @@ import { Theme } from '../components/Theme';
 import { signOut } from '@firebase/auth';
 import * as SecureStore from 'expo-secure-store';
 import { useFocusEffect } from '@react-navigation/core';
-import axios from 'axios';
-import { API_ENDPOINT } from '../components/EnvironmentVariables';
+import { socket } from '../components/Socket';
 
 interface getUsernameFields {
     error: boolean,
@@ -34,6 +33,9 @@ export default function MyProfile({ navigation }: { navigation: any }) {
     useFocusEffect(
         React.useCallback(() => {
             fetchUsername();
+
+            // Cleanup
+            return (() => { socket.off('return-username') })
         }, [])
     );
 
@@ -45,15 +47,13 @@ export default function MyProfile({ navigation }: { navigation: any }) {
         SecureStore.getItemAsync('firebase_idToken')
             .then((idToken) => {
                 if (idToken !== null) {
-                    axios.post<getUsernameFields>(`${API_ENDPOINT}/get-my-username`, {
+                    socket.emit('get-my-username', {
                         idToken
                     })
-                        .then((results) => {
-                            setMyUsername(results.data.username);
-                        })
-                        .catch(() => {
-                            alert('Could not get username from server');
-                        })
+
+                    socket.on('return-username', (data) => {
+                        setMyUsername(data.username)
+                    })
                 }
             })
     }

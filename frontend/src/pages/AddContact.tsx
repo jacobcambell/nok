@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Text, StyleSheet, Pressable, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Theme } from '../components/Theme';
@@ -6,6 +6,8 @@ import * as SecureStore from 'expo-secure-store'
 import axios from 'axios';
 import { API_ENDPOINT } from '../components/EnvironmentVariables';
 import Ionicons from '@expo/vector-icons/Ionicons';
+import { socket } from '../components/Socket';
+import { useFocusEffect } from '@react-navigation/core';
 
 interface addContactResults {
     error: boolean,
@@ -16,24 +18,30 @@ export default function AddContact({ navigation }: { navigation: any }) {
 
     const [contactUsername, setContactUsername] = useState('');
 
+    useFocusEffect(
+        React.useCallback(() => {
+            socket.on('add-contact-error', (data) => {
+                alert(data.message);
+            })
+
+            socket.on('add-contact-success', () => {
+                navigation.navigate('Contacts');
+            })
+
+            // Cleanup
+            return (() => {
+                socket.off('add-contact-error')
+                socket.off('add-contact-success')
+            })
+        }, [])
+    );
     const handleAdd = () => {
         SecureStore.getItemAsync('firebase_idToken')
             .then((idToken) => {
-                axios.post<addContactResults>(`${API_ENDPOINT}/add-contact`, {
+                socket.emit('add-contact', {
                     idToken,
                     username: contactUsername
                 })
-                    .then((results) => {
-                        if (results.data.error) {
-                            alert(results.data.message);
-                        }
-                        else {
-                            navigation.navigate('Contacts');
-                        }
-                    })
-                    .catch((err) => {
-
-                    })
             })
     }
 

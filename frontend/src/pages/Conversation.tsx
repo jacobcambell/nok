@@ -7,6 +7,7 @@ import { API_ENDPOINT } from '../components/EnvironmentVariables'
 import * as SecureStore from 'expo-secure-store';
 import axios from 'axios';
 import Ionicons from '@expo/vector-icons/Ionicons';
+import { socket } from '../components/Socket'
 
 interface Message {
     message_id: number;
@@ -19,18 +20,30 @@ export default function Conversation({ navigation, route }: { navigation: any, r
 
     const [input, setInput] = useState<string>('');
     const [messages, setMessages] = useState<Message[]>([]);
-    const [fetching, setFetching] = useState<boolean>(false);
 
     useFocusEffect(
         React.useCallback(() => {
-            // Schedule API call to get message threads every 5 seconds (also call immediately)
             loadMessages();
-            const checkInterval = setInterval(() => {
-                loadMessages();
-            }, 5000)
 
-            // Clear the interval when this component loses focus
-            return () => clearInterval(checkInterval);
+            socket.on('send-message-success', () => {
+                loadMessages();
+                setInput('');
+            })
+
+            socket.on('client-new-message', () => {
+                loadMessages();
+            })
+
+            socket.on('return-conversation-messages', (data: Message[]) => {
+                setMessages(data);
+            })
+
+            // Cleanup
+            return (() => {
+                socket.off('send-message-success')
+                socket.off('client-new-message')
+                socket.off('return-conversation-messages')
+            })
         }, [])
     );
 
@@ -39,33 +52,20 @@ export default function Conversation({ navigation, route }: { navigation: any, r
     }
 
     const loadMessages = async () => {
-        if (!fetching) {
-            setFetching(true);
-
-            let token: string | null = '';
-            try {
-                await SecureStore.getItemAsync('firebase_idToken').then((idToken) => { token = idToken })
-            }
-            catch (e) {
-
-            }
-
-            if (token !== null) {
-                try {
-                    await axios.post<Message[]>(`${API_ENDPOINT}/get-conversation-messages`, {
-                        idToken: token,
-                        thread_id: route.params.thread_id
-                    }).then((res) => {
-                        setMessages(res.data);
-                        setFetching(false);
-                    })
-                }
-                catch (e) {
-
-                }
-
-            }
+        let token: string | null = '';
+        try {
+            await SecureStore.getItemAsync('firebase_idToken').then((idToken) => { token = idToken })
         }
+        catch (e) {
+        }
+
+        if (token !== null) {
+            socket.emit('get-conversation-messages', {
+                idToken: token,
+                thread_id: route.params.thread_id
+            })
+        }
+
     }
 
     useEffect(() => {
@@ -85,17 +85,11 @@ export default function Conversation({ navigation, route }: { navigation: any, r
 
         SecureStore.getItemAsync('firebase_idToken')
             .then((idToken) => {
-                axios.post(`${API_ENDPOINT}/send-message`, {
+                socket.emit('send-message', {
                     idToken,
                     thread_id: route.params.thread_id,
                     message: input
                 })
-                    .then(() => {
-                        // Manually call loadMessages
-                        loadMessages();
-                        setInput('');
-                    })
-                    .catch((err) => { alert(err) })
             })
     }
 

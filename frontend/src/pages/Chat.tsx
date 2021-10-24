@@ -7,6 +7,7 @@ import { API_ENDPOINT } from '../components/EnvironmentVariables'
 import * as SecureStore from 'expo-secure-store';
 import axios from 'axios';
 import Ionicons from '@expo/vector-icons/Ionicons';
+import { socket } from '../components/Socket'
 
 interface MessageThread {
     id: number;
@@ -22,38 +23,33 @@ export default function Chat({ navigation }: { navigation: any }) {
 
     useFocusEffect(
         React.useCallback(() => {
-            // Schedule API call to get message threads every 5 seconds (also call immediately)
             loadThreads();
-            const checkInterval = setInterval(() => {
-                loadThreads();
-            }, 5000)
 
-            // Clear the interval when this component loses focus
-            return () => clearInterval(checkInterval);
+            socket.on('client-new-message-threads', () => {
+                loadThreads();
+            })
+
+            socket.on('return-message-threads', (data: MessageThread[]) => {
+                setMessageThreads(data);
+            })
+
+            // Cleanup
+            return (() => {
+                socket.off('client-new-message-threads')
+                socket.off('return-message-threads')
+            })
         }, [])
     );
 
     const loadThreads = () => {
-        if (!fetching) {
-            setFetching(true);
-
-            SecureStore.getItemAsync('firebase_idToken')
-                .then((idToken) => {
-                    if (idToken !== null) {
-                        axios.post<MessageThread[]>(`${API_ENDPOINT}/get-message-threads`, {
-                            idToken
-                        })
-                            .then((res) => {
-                                setMessageThreads(res.data);
-                                setFetching(false);
-                            })
-                            .catch((err) => { })
-                    } else {
-                        // idToken is null, the firebase auth provider probably hasn't set it yet. We don't want to do any fetching until we have it
-                        setFetching(false);
-                    }
-                })
-        }
+        SecureStore.getItemAsync('firebase_idToken')
+            .then((idToken) => {
+                if (idToken !== null) {
+                    socket.emit('get-message-threads', {
+                        idToken
+                    })
+                }
+            })
     }
 
     return (

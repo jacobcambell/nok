@@ -17,45 +17,9 @@ const Main = ({ navigation }: { navigation: any }) => {
     const { firebaseAuth } = useContext(AuthContext);
 
     useEffect(() => {
-        // Every time the logged in user renders this main component, we want to send
-        // a ping to the server with the user object
-
-        // Wait a few seconds for AuthContext to update the token
-        setTimeout(async () => {
-            const idToken = await SecureStore.getItemAsync('firebase_idToken')
-
-            registerForPushNotificationsAsync().then((expoPushToken) => {
-                // Ping the api with the user's idToken
-                axios.post(`${API_ENDPOINT}/ping`, {
-                    idToken,
-                    expoPushToken
-                })
-                    .catch((err) => { })
-            })
-        }, 3000);
     }, []);
 
-    async function registerForPushNotificationsAsync() {
-        let expoPushToken;
 
-        const existingPerms = await Notifications.getPermissionsAsync();
-
-        if (existingPerms.status !== 'granted') {
-            // User has not yet granted us notification permissions
-            const { status } = await Notifications.requestPermissionsAsync();
-
-            if (status !== 'granted') {
-                // Even after requesting perms, user still did not accept
-                return;
-            }
-        }
-
-        // Get the expoPushToken
-        expoPushToken = await Notifications.getExpoPushTokenAsync();
-        expoPushToken = expoPushToken.data;
-
-        return expoPushToken;
-    }
 
     return (
         <Tab.Navigator screenOptions={({ route }) => ({

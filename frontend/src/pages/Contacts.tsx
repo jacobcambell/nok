@@ -6,12 +6,13 @@ import * as SecureStore from 'expo-secure-store';
 import { API_ENDPOINT } from '../components/EnvironmentVariables';
 import { useFocusEffect } from '@react-navigation/core';
 import axios from 'axios';
+import { socket } from '../components/Socket';
 
 interface Contact {
     id: number;
     username: string;
 }
-interface allContacts {
+interface AllContacts {
     active_contacts: Contact[];
     outgoing_contacts: Contact[];
     incoming_contacts: Contact[];
@@ -19,7 +20,7 @@ interface allContacts {
 
 export default function Contacts({ navigation }: { navigation: any }) {
 
-    const [contacts, setContacts] = useState<allContacts>({
+    const [contacts, setContacts] = useState<AllContacts>({
         active_contacts: [],
         outgoing_contacts: [],
         incoming_contacts: []
@@ -28,6 +29,15 @@ export default function Contacts({ navigation }: { navigation: any }) {
     useFocusEffect(
         React.useCallback(() => {
             loadContacts();
+
+            socket.on('return-contacts', (data: AllContacts) => {
+                setContacts(data);
+            })
+
+            // Cleanup
+            return (() => {
+                socket.off('return-contacts')
+            })
         }, [])
     );
 
@@ -53,15 +63,9 @@ export default function Contacts({ navigation }: { navigation: any }) {
     const loadContacts = () => {
         SecureStore.getItemAsync('firebase_idToken')
             .then((idToken) => {
-                axios.post<allContacts>(`${API_ENDPOINT}/get-contacts`, {
+                socket.emit('get-contacts', {
                     idToken
                 })
-                    .then((results) => {
-                        setContacts(results.data);
-                    })
-                    .catch((err) => {
-                        alert(err);
-                    })
             })
     }
 
