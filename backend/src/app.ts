@@ -85,6 +85,9 @@ io.on("connection", (socket) => {
                 }
             }
         });
+
+        // Subscribe this socket to a room named after their firebase uid
+        socket.join(uid);
     })
 
     socket.on('get-my-username', async (data) => {
@@ -188,6 +191,12 @@ io.on("connection", (socket) => {
             });
         });
     })
+
+    socket.on('disconnect', () => {
+        // TODO - unsubscribe users from rooms on disconnect
+    })
+
+
 });
 
 io.listen(6000);
