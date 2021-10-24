@@ -24,66 +24,132 @@ const con = mysql.createConnection({
 });
 con.connect();
 
-app.post('/ping', async (req: Express.Request, res: Express.Response) => {
-    // User will send their firebase idToken every time they render the Main component
-    const check = [
-        req.body.idToken,
-        // req.body.expoPushToken -- Optional
-    ];
+// Socket.IO
+import { Server } from "socket.io";
+const io = new Server({});
 
-    if (check.includes(undefined) || check.includes(null)) {
-        res.sendStatus(400);
-        return;
-    }
+io.on("connection", (socket) => {
+    console.log('someone connected boi ' + socket.id)
 
-    let uid: string = '';
+    socket.on('ping', async (data) => {
+        const check = [
+            data.idToken,
+            // data.expoPushToken - optional
+        ];
 
-    try {
-        await firebaseAdmin.auth().verifyIdToken(req.body.idToken).then(decodedToken => { uid = decodedToken.uid })
-    }
-    catch (e) {
-        res.sendStatus(400);
-        return;
-    }
+        if (check.includes(undefined) || check.includes(null)) {
+            return;
+        }
 
-    // Valid Firebase user. Next we want to check if this uid exists in the users table
-    con.query('SELECT COUNT(*) AS c FROM users WHERE users.firebase_uid=?', [uid], (err, results) => {
-        if (err) throw err;
+        let uid: string = '';
 
-        if (results[0].c === 0) {
-            // UID is not in our users table. Let's add them to it
-            let newUsername = generateName();
+        try {
+            await firebaseAdmin.auth().verifyIdToken(data.idToken).then(decodedToken => { uid = decodedToken.uid })
+        }
+        catch (e) {
+            return;
+        }
 
-            con.query('SELECT COUNT(*) AS c FROM users WHERE users.username=?', [newUsername], (err, results) => {
-                if (err) throw err;
+        // Valid Firebase user. Next we want to check if this uid exists in the users table
+        con.query('SELECT COUNT(*) AS c FROM users WHERE users.firebase_uid=?', [uid], (err, results) => {
+            if (err) throw err;
 
-                if (results[0].c === 1) {
-                    // User with that username already exists, so we'll add some numbers to the end (100 through 999)
-                    newUsername += (Math.random() * (999 - 100) + 100).toString();
-                }
+            if (results[0].c === 0) {
+                // UID is not in our users table. Let's add them to it
+                let newUsername = generateName();
 
-                con.query('INSERT INTO users (firebase_uid, username) VALUES (?, ?)', [uid, newUsername], (err, results) => {
+                con.query('SELECT COUNT(*) AS c FROM users WHERE users.username=?', [newUsername], (err, results) => {
                     if (err) throw err;
+
+                    if (results[0].c === 1) {
+                        // User with that username already exists, so we'll add some numbers to the end (100 through 999)
+                        newUsername += (Math.random() * (999 - 100) + 100).toString();
+                    }
+
+                    con.query('INSERT INTO users (firebase_uid, username) VALUES (?, ?)', [uid, newUsername], (err, results) => {
+                        if (err) throw err;
+                    });
                 });
-            });
 
-        }
-        else {
-            // This uid already exists in our users table
-
-            // If they sent a expoPushToken, we want to assign it to them so they can receive push notifications
-            // Notice that we will update this value with anything the user sends, so if they log in with a new device it will get
-            // updated to send notifications to their most recent device
-            if (typeof req.body.expoPushToken !== 'undefined') {
-                con.query('UPDATE users SET expoPushToken=? WHERE firebase_uid=?', [req.body.expoPushToken, uid], (err, results) => {
-                    if (err) throw err;
-                })
             }
-        }
+            else {
+                // This uid already exists in our users table
 
-        res.sendStatus(200);
-    });
-})
+                // If they sent a expoPushToken, we want to assign it to them so they can receive push notifications
+                // Notice that we will update this value with anything the user sends, so if they log in with a new device it will get
+                // updated to send notifications to their most recent device
+                if (typeof data.expoPushToken !== 'undefined') {
+                    con.query('UPDATE users SET expoPushToken=? WHERE firebase_uid=?', [data.expoPushToken, uid], (err, results) => {
+                        if (err) throw err;
+                    })
+                }
+            }
+        });
+    })
+});
+
+io.listen(6000);
+
+// app.post('/ping', async (req: Express.Request, res: Express.Response) => {
+//     // User will send their firebase idToken every time they render the Main component
+//     const check = [
+//         req.body.idToken,
+//         // req.body.expoPushToken -- Optional
+//     ];
+
+//     if (check.includes(undefined) || check.includes(null)) {
+//         res.sendStatus(400);
+//         return;
+//     }
+
+//     let uid: string = '';
+
+//     try {
+//         await firebaseAdmin.auth().verifyIdToken(req.body.idToken).then(decodedToken => { uid = decodedToken.uid })
+//     }
+//     catch (e) {
+//         res.sendStatus(400);
+//         return;
+//     }
+
+//     // Valid Firebase user. Next we want to check if this uid exists in the users table
+//     con.query('SELECT COUNT(*) AS c FROM users WHERE users.firebase_uid=?', [uid], (err, results) => {
+//         if (err) throw err;
+
+//         if (results[0].c === 0) {
+//             // UID is not in our users table. Let's add them to it
+//             let newUsername = generateName();
+
+//             con.query('SELECT COUNT(*) AS c FROM users WHERE users.username=?', [newUsername], (err, results) => {
+//                 if (err) throw err;
+
+//                 if (results[0].c === 1) {
+//                     // User with that username already exists, so we'll add some numbers to the end (100 through 999)
+//                     newUsername += (Math.random() * (999 - 100) + 100).toString();
+//                 }
+
+//                 con.query('INSERT INTO users (firebase_uid, username) VALUES (?, ?)', [uid, newUsername], (err, results) => {
+//                     if (err) throw err;
+//                 });
+//             });
+
+//         }
+//         else {
+//             // This uid already exists in our users table
+
+//             // If they sent a expoPushToken, we want to assign it to them so they can receive push notifications
+//             // Notice that we will update this value with anything the user sends, so if they log in with a new device it will get
+//             // updated to send notifications to their most recent device
+//             if (typeof req.body.expoPushToken !== 'undefined') {
+//                 con.query('UPDATE users SET expoPushToken=? WHERE firebase_uid=?', [req.body.expoPushToken, uid], (err, results) => {
+//                     if (err) throw err;
+//                 })
+//             }
+//         }
+
+//         res.sendStatus(200);
+//     });
+// })
 
 app.post('/get-my-username', async (req: Express.Request, res: Express.Response) => {
     const check = [
