@@ -411,7 +411,74 @@ io.on("connection", (socket) => {
         })
     })
 
+    socket.on('get-conversation-messages', async (data) => {
+        const check = [
+            data.idToken,
+            data.thread_id
+        ];
 
+        if (check.includes(undefined) || check.includes(null)) {
+            return;
+        }
+
+        let uid: string = '';
+
+        try {
+            await firebaseAdmin.auth().verifyIdToken(data.idToken).then(decodedToken => { uid = decodedToken.uid })
+        }
+        catch (e) {
+            return;
+        }
+
+        // Get this user's id from their firebase uid
+        con.query('SELECT users.id FROM users WHERE users.firebase_uid=?', [uid], (err, results) => {
+            if (err) throw err;
+
+            if (results.length === 0) {
+                // For some reason there is no user id matching that firebase uid
+                return;
+            }
+
+            const user_id = results[0].id;
+
+            // Load messages from the requested thread id, IF the user is in it. Returns empty if they do not belong to the requested thread id
+            con.query(`SELECT
+                                messages.id AS message_id,
+                                messages.message,
+                                TIMESTAMPDIFF(MINUTE, messages.send_time, NOW()) as message_age,
+                                users.username
+                                FROM messages, message_threads, users
+                                WHERE
+                                (message_threads.user1=? OR message_threads.user2=?) AND
+                                message_threads.id=messages.thread_id AND
+                                message_threads.id=? AND
+                                users.id=messages.from_user
+                                ORDER BY messages.send_time ASC
+                    `, [user_id, user_id, data.thread_id], (err, results) => {
+                if (err) throw err;
+
+                interface Message {
+                    message_id: number;
+                    from: string;
+                    message: string;
+                    message_age: string;
+                }
+
+                let messages: Message[] = [];
+
+                for (let i = 0; i < results.length; i++) {
+                    messages.push({ message_id: results[i].message_id, from: results[i].username, message: results[i].message, message_age: results[i].message_age });
+                }
+
+                // Update the read status for this user/thread combo
+                con.query('UPDATE message_thread_readstatus SET is_read=1 WHERE user_id=? AND thread_id=?', [user_id, data.thread_id], (err, results) => {
+                    if (err) throw err;
+                })
+
+                socket.emit('return-conversation-messages', messages)
+            })
+        });
+    })
 });
 
 io.listen(6000);
@@ -614,79 +681,6 @@ app.post('/process-contact', async (req: Express.Request, res: Express.Response)
             if (err) throw err;
         });
     }
-})
-
-app.post('/get-conversation-messages', async (req: Express.Request, res: Express.Response) => {
-    const check = [
-        req.body.idToken,
-        req.body.thread_id
-    ];
-
-    if (check.includes(undefined) || check.includes(null)) {
-        res.sendStatus(400);
-        return;
-    }
-
-    let uid: string = '';
-
-    try {
-        await firebaseAdmin.auth().verifyIdToken(req.body.idToken).then(decodedToken => { uid = decodedToken.uid })
-    }
-    catch (e) {
-        res.sendStatus(400);
-        return;
-    }
-
-    // Get this user's id from their firebase uid
-    con.query('SELECT users.id FROM users WHERE users.firebase_uid=?', [uid], (err, results) => {
-        if (err) throw err;
-
-        if (results.length === 0) {
-            // For some reason there is no user id matching that firebase uid
-            res.sendStatus(400);
-            return;
-        }
-
-        const user_id = results[0].id;
-
-        // Load messages from the requested thread id, IF the user is in it. Returns empty if they do not belong to the requested thread id
-        con.query(`SELECT
-                            messages.id AS message_id,
-                            messages.message,
-                            TIMESTAMPDIFF(MINUTE, messages.send_time, NOW()) as message_age,
-                            users.username
-                            FROM messages, message_threads, users
-                            WHERE
-                            (message_threads.user1=? OR message_threads.user2=?) AND
-                            message_threads.id=messages.thread_id AND
-                            message_threads.id=? AND
-                            users.id=messages.from_user
-                            ORDER BY messages.send_time ASC
-                `, [user_id, user_id, req.body.thread_id], (err, results) => {
-            if (err) throw err;
-
-            interface Message {
-                message_id: number;
-                from: string;
-                message: string;
-                message_age: string;
-            }
-
-            let messages: Message[] = [];
-
-            for (let i = 0; i < results.length; i++) {
-                messages.push({ message_id: results[i].message_id, from: results[i].username, message: results[i].message, message_age: results[i].message_age });
-            }
-
-            // Update the read status for this user/thread combo
-            con.query('UPDATE message_thread_readstatus SET is_read=1 WHERE user_id=? AND thread_id=?', [user_id, req.body.thread_id], (err, results) => {
-                if (err) throw err;
-            })
-
-            res.json(messages);
-            return;
-        })
-    });
 })
 
 app.post('/change-username', async (req: Express.Request, res: Express.Response) => {
