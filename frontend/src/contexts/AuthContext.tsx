@@ -27,10 +27,6 @@ export default function AuthProvider({ children }: { children: any }) {
                 .then(async (token) => {
                     // Save the user's idToken to SecureStore
                     SecureStore.setItemAsync('firebase_idToken', token);
-
-                    registerForPushNotificationsAsync().then((expoPushToken) => {
-                        socket.emit('ping', { idToken: token, expoPushToken });
-                    })
                 })
         });
     }, []);
@@ -40,26 +36,4 @@ export default function AuthProvider({ children }: { children: any }) {
             {children}
         </AuthContext.Provider>
     );
-}
-
-async function registerForPushNotificationsAsync() {
-    let expoPushToken;
-
-    const existingPerms = await Notifications.getPermissionsAsync();
-
-    if (existingPerms.status !== 'granted') {
-        // User has not yet granted us notification permissions
-        const { status } = await Notifications.requestPermissionsAsync();
-
-        if (status !== 'granted') {
-            // Even after requesting perms, user still did not accept
-            return;
-        }
-    }
-
-    // Get the expoPushToken
-    expoPushToken = await Notifications.getExpoPushTokenAsync();
-    expoPushToken = expoPushToken.data;
-
-    return expoPushToken;
 }
