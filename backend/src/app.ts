@@ -576,6 +576,62 @@ io.on("connection", (socket) => {
             });
         });
     })
+
+    socket.on('change-username', async (data) => {
+        const check = [
+            data.idToken,
+            data.username
+        ];
+
+        if (check.includes(undefined) || check.includes(null)) {
+            return;
+        }
+
+        // Check username length
+        if (typeof data.username !== 'string' || data.username.length <= 0 || data.username.length > 15) {
+            return;
+        }
+
+        let uid: string = '';
+
+        try {
+            await firebaseAdmin.auth().verifyIdToken(data.idToken).then(decodedToken => { uid = decodedToken.uid })
+        }
+        catch (e) {
+            return;
+        }
+
+        // Get this user's id from their firebase uid
+        con.query('SELECT users.id FROM users WHERE users.firebase_uid=?', [uid], (err, results) => {
+            if (err) throw err;
+
+            if (results.length === 0) {
+                // For some reason there is no user id matching that firebase uid
+                return;
+            }
+
+            const user_id = results[0].id;
+
+            // Check if the requested username already exists
+            con.query('SELECT COUNT(*) as c FROM users WHERE users.username=?', [data.username], (err, results) => {
+                if (err) throw err;
+
+                if (results[0].c > 0) {
+                    // Someone with the requested username already exists
+                    socket.emit('change-username-error', { message: 'Username already taken' })
+                    return;
+                }
+
+                // No users with this username, update this user
+                con.query('UPDATE users SET users.username=? WHERE users.id=?', [data.username, user_id], (err, results) => {
+                    if (err) throw err;
+
+                    socket.emit('change-username-success')
+                    return;
+                });
+            })
+        })
+    })
 });
 
 io.listen(6000);
@@ -676,66 +732,6 @@ app.post('/process-contact', async (req: Express.Request, res: Express.Response)
             if (err) throw err;
         });
     }
-})
-
-app.post('/change-username', async (req: Express.Request, res: Express.Response) => {
-    const check = [
-        req.body.idToken,
-        req.body.username
-    ];
-
-    if (check.includes(undefined) || check.includes(null)) {
-        res.sendStatus(400);
-        return;
-    }
-
-    // Check username length
-    if (typeof req.body.username !== 'string' || req.body.username.length <= 0 || req.body.username.length > 15) {
-        res.sendStatus(400);
-        return;
-    }
-
-    let uid: string = '';
-
-    try {
-        await firebaseAdmin.auth().verifyIdToken(req.body.idToken).then(decodedToken => { uid = decodedToken.uid })
-    }
-    catch (e) {
-        res.sendStatus(400);
-        return;
-    }
-
-    // Get this user's id from their firebase uid
-    con.query('SELECT users.id FROM users WHERE users.firebase_uid=?', [uid], (err, results) => {
-        if (err) throw err;
-
-        if (results.length === 0) {
-            // For some reason there is no user id matching that firebase uid
-            res.sendStatus(400);
-            return;
-        }
-
-        const user_id = results[0].id;
-
-        // Check if the requested username already exists
-        con.query('SELECT COUNT(*) as c FROM users WHERE users.username=?', [req.body.username], (err, results) => {
-            if (err) throw err;
-
-            if (results[0].c > 0) {
-                // Someone with the requested username already exists
-                res.json({ error: true, message: 'Username taken' });
-                return;
-            }
-
-            // No users with this username, update this user
-            con.query('UPDATE users SET users.username=? WHERE users.id=?', [req.body.username, user_id], (err, results) => {
-                if (err) throw err;
-
-                res.json({ error: false, message: 'Updated username successfully' })
-                return;
-            });
-        })
-    })
 })
 
 app.listen(PORT, () => {

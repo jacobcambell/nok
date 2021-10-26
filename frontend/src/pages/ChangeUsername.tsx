@@ -5,11 +5,8 @@ import { Theme } from '../components/Theme';
 import * as SecureStore from 'expo-secure-store'
 import axios from 'axios';
 import { API_ENDPOINT } from '../components/EnvironmentVariables';
-
-interface changeUsernameResults {
-    error: boolean,
-    message: string
-}
+import { socket } from '../components/Socket';
+import { useFocusEffect } from '@react-navigation/core';
 
 export default function ChangeUsername({ navigation, route }: { navigation: any, route: any }) {
 
@@ -24,21 +21,30 @@ export default function ChangeUsername({ navigation, route }: { navigation: any,
 
         SecureStore.getItemAsync('firebase_idToken')
             .then((idToken) => {
-                axios.post<changeUsernameResults>(`${API_ENDPOINT}/change-username`, {
+                socket.emit('change-username', {
                     idToken,
                     username
                 })
-                    .then((res) => {
-                        if (res.data.error) {
-                            alert(res.data.message);
-                        }
-                        else {
-                            navigation.navigate('MyProfile');
-                        }
-                    })
-                    .catch((err) => { })
             })
     }
+
+    useFocusEffect(
+        React.useCallback(() => {
+            socket.on('change-username-success', () => {
+                navigation.navigate('MyProfile');
+            })
+
+            socket.on('change-username-error', (data) => {
+                alert(data.message)
+            })
+
+            // Cleanup
+            return (() => {
+                socket.off('change-username-success')
+                socket.off('change-username-error')
+            })
+        }, [])
+    );
 
     return (
         <SafeAreaView style={styles.content}>
