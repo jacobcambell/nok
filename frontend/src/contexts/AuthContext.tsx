@@ -4,7 +4,6 @@ import { getAuth } from 'firebase/auth';
 import * as SecureStore from 'expo-secure-store';
 import * as Notifications from 'expo-notifications'
 import axios from 'axios';
-import { API_ENDPOINT } from '../components/EnvironmentVariables';
 import { socket } from '../components/Socket';
 
 const firebaseApp = initializeApp({

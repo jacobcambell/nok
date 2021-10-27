@@ -4,7 +4,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Theme } from '../components/Theme';
 import * as SecureStore from 'expo-secure-store'
 import axios from 'axios';
-import { API_ENDPOINT } from '../components/EnvironmentVariables';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { socket } from '../components/Socket';
 import { useFocusEffect } from '@react-navigation/core';

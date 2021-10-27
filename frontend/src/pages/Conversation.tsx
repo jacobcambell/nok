@@ -3,7 +3,6 @@ import { useFocusEffect } from '@react-navigation/core'
 import { Text, StyleSheet, View, ScrollView, Pressable, TextInput, KeyboardAvoidingView, Platform } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { Theme } from '../components/Theme'
-import { API_ENDPOINT } from '../components/EnvironmentVariables'
 import * as SecureStore from 'expo-secure-store';
 import axios from 'axios';
 import Ionicons from '@expo/vector-icons/Ionicons';

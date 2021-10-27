@@ -7,7 +7,6 @@ import Contacts from "./pages/Contacts";
 import MyProfile from "./pages/MyProfile";
 import * as SecureStore from 'expo-secure-store';
 import axios from "axios";
-import { API_ENDPOINT } from './components/EnvironmentVariables';
 import { AuthContext } from "./contexts/AuthContext";
 import * as Notifications from 'expo-notifications'
 import { socket } from "./components/Socket";
@@ -22,6 +21,10 @@ const Main = ({ navigation }: { navigation: any }) => {
             SecureStore.getItemAsync('firebase_idToken').then((token) => {
                 socket.emit('ping', { idToken: token, expoPushToken });
             })
+        })
+
+        SecureStore.getItemAsync('firebase_idToken').then((token) => {
+            socket.emit('ping', { idToken: token });
         })
     }, []);
 

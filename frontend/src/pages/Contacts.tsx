@@ -3,7 +3,6 @@ import { Text, StyleSheet, Pressable, View, ScrollView, Image } from 'react-nati
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Theme } from '../components/Theme';
 import * as SecureStore from 'expo-secure-store';
-import { API_ENDPOINT } from '../components/EnvironmentVariables';
 import { useFocusEffect } from '@react-navigation/core';
 import axios from 'axios';
 import { socket } from '../components/Socket';
