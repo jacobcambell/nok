@@ -1,12 +1,9 @@
 require('dotenv').config();
 import axios from 'axios';
-import Express from 'express';
 import * as firebaseAdmin from 'firebase-admin';
 import mysql from 'mysql';
 import { generateName } from './generateName';
-const app = Express();
-const PORT = process.env.PORT || 4000;
-app.use(Express.json())
+const SOCKET_PORT = 6000;
 
 // Firebase Initialization
 const serviceAccount = require('../credentials/serviceAccountKey.json');
@@ -722,8 +719,11 @@ io.on("connection", (socket) => {
     })
 });
 
-io.listen(6000);
+try {
+    io.listen(SOCKET_PORT);
+    console.log(`Listening on port ${SOCKET_PORT}`)
+}
 
-app.listen(PORT, () => {
-    console.log('Listening on ' + PORT)
-})
+catch (e) {
+    console.log(e)
+}

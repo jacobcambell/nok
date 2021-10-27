@@ -9,7 +9,6 @@ First, install all the required dependencies:
 Next, create a `.env` file. There are a couple environment variables that must be set:
 
 ```
-PORT= (optional - the port used for express)
 MYSQL_HOST=
 MYSQL_USER=
 MYSQL_PASSWORD=
