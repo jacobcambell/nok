@@ -34,9 +34,14 @@ export default function Contacts({ navigation }: { navigation: any }) {
                 setContacts(data);
             })
 
+            socket.on('process-contact-success', () => {
+                loadContacts();
+            })
+
             // Cleanup
             return (() => {
                 socket.off('return-contacts')
+                socket.off('process-contact-success')
             })
         }, [])
     );
@@ -48,15 +53,11 @@ export default function Contacts({ navigation }: { navigation: any }) {
     const processContact = (contact_id: number, command: string) => {
         SecureStore.getItemAsync('firebase_idToken')
             .then((idToken) => {
-                axios.post<any>(`${API_ENDPOINT}/process-contact`, {
+                socket.emit('process-contact', {
                     contact_id,
                     command,
                     idToken
                 })
-                    .then(() => {
-                        loadContacts();
-                    })
-                    .catch((err) => { })
             })
     }
 

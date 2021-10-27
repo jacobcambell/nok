@@ -632,107 +632,97 @@ io.on("connection", (socket) => {
             })
         })
     })
-});
 
-io.listen(6000);
+    socket.on('process-contact', async (data) => {
+        const check = [
+            data.contact_id,
+            data.command,
+            data.idToken
+        ];
 
-app.post('/process-contact', async (req: Express.Request, res: Express.Response) => {
-    // Params:
-    // contact_id: number - the contact the user wants to process
-    // command: string = accept, deny, or cancel depending on what the user wants to do
-
-    const check = [
-        req.body.contact_id,
-        req.body.command,
-        req.body.idToken
-    ];
-
-    if (check.includes(undefined) || check.includes(null)) {
-        res.sendStatus(400);
-        return;
-    }
-
-    // Check valid command
-    if (req.body.command !== 'accept' && req.body.command !== 'deny' && req.body.command !== 'cancel') {
-        res.sendStatus(400);
-        return;
-    }
-
-    let uid: string = '';
-
-    try {
-        await firebaseAdmin.auth().verifyIdToken(req.body.idToken).then(decodedToken => { uid = decodedToken.uid })
-    }
-    catch (e) {
-        res.sendStatus(400);
-        return;
-    }
-
-    // Get this user's id from their firebase uid
-    con.query('SELECT users.id FROM users WHERE users.firebase_uid=?', [uid], (err, results) => {
-        if (err) throw err;
-
-        if (results.length === 0) {
-            // For some reason there is no user id matching that firebase uid
-            res.sendStatus(400);
+        if (check.includes(undefined) || check.includes(null)) {
             return;
         }
 
-        const user_id = results[0].id;
-
-        switch (req.body.command) {
-            case 'accept':
-                acceptContact(req.body.contact_id, user_id);
-                break;
-            case 'deny':
-                denyContact(req.body.contact_id, user_id);
-                break;
-            case 'cancel':
-                cancelContact(req.body.contact_id, user_id);
-                break;
-            default:
-                res.sendStatus(400);
-                break;
+        // Check valid command
+        if (data.command !== 'accept' && data.command !== 'deny' && data.command !== 'cancel') {
+            return;
         }
 
-        res.sendStatus(200);
-        return;
-    })
+        let uid: string = '';
 
-    const acceptContact = (contact_id: number, user_id: number) => {
-        con.query('UPDATE contacts SET is_pending=0 WHERE contact_id=? AND owner_id=? AND is_pending=1', [user_id, contact_id], (err, results) => {
+        try {
+            await firebaseAdmin.auth().verifyIdToken(data.idToken).then(decodedToken => { uid = decodedToken.uid })
+        }
+        catch (e) {
+            return;
+        }
+
+        // Get this user's id from their firebase uid
+        con.query('SELECT users.id FROM users WHERE users.firebase_uid=?', [uid], (err, results) => {
             if (err) throw err;
 
-            // Create a message thread for these two users
-            con.query('INSERT INTO message_threads (user1, user2) VALUES (?, ?)', [contact_id, user_id], (err, results) => {
+            if (results.length === 0) {
+                // For some reason there is no user id matching that firebase uid
+                return;
+            }
+
+            const user_id = results[0].id;
+
+            switch (data.command) {
+                case 'accept':
+                    acceptContact(data.contact_id, user_id);
+                    break;
+                case 'deny':
+                    denyContact(data.contact_id, user_id);
+                    break;
+                case 'cancel':
+                    cancelContact(data.contact_id, user_id);
+                    break;
+                default:
+                    break;
+            }
+
+            socket.emit('process-contact-success')
+        })
+
+        const acceptContact = (contact_id: number, user_id: number) => {
+            con.query('UPDATE contacts SET is_pending=0 WHERE contact_id=? AND owner_id=? AND is_pending=1', [user_id, contact_id], (err, results) => {
                 if (err) throw err;
 
-                // This is the id of the message thread we just created
-                let thread_id = results.insertId;
+                // Create a message thread for these two users
+                con.query('INSERT INTO message_threads (user1, user2) VALUES (?, ?)', [contact_id, user_id], (err, results) => {
+                    if (err) throw err;
 
-                // Now we want to insert read status rows for each user in this thread
-                con.query('INSERT INTO message_thread_readstatus (thread_id, user_id, is_read) VALUES (?, ?, 1)', [thread_id, user_id], (err, results) => {
-                    if (err) throw err;
-                });
-                con.query('INSERT INTO message_thread_readstatus (thread_id, user_id, is_read) VALUES (?, ?, 1)', [thread_id, contact_id], (err, results) => {
-                    if (err) throw err;
+                    // This is the id of the message thread we just created
+                    let thread_id = results.insertId;
+
+                    // Now we want to insert read status rows for each user in this thread
+                    con.query('INSERT INTO message_thread_readstatus (thread_id, user_id, is_read) VALUES (?, ?, 1)', [thread_id, user_id], (err, results) => {
+                        if (err) throw err;
+                    });
+                    con.query('INSERT INTO message_thread_readstatus (thread_id, user_id, is_read) VALUES (?, ?, 1)', [thread_id, contact_id], (err, results) => {
+                        if (err) throw err;
+                    });
                 });
             });
-        });
-    }
+        }
 
-    const denyContact = (contact_id: number, user_id: number) => {
-        con.query('DELETE FROM contacts WHERE contact_id=? AND owner_id=? AND is_pending=1', [user_id, contact_id], (err, results) => {
-            if (err) throw err;
-        });
-    }
+        const denyContact = (contact_id: number, user_id: number) => {
+            con.query('DELETE FROM contacts WHERE contact_id=? AND owner_id=? AND is_pending=1', [user_id, contact_id], (err, results) => {
+                if (err) throw err;
+            });
+        }
 
-    const cancelContact = (contact_id: number, user_id: number) => {
-        con.query('DELETE FROM contacts WHERE contact_id=? AND owner_id=? AND is_pending=1', [contact_id, user_id], (err, results) => {
-            if (err) throw err;
-        });
-    }
-})
+        const cancelContact = (contact_id: number, user_id: number) => {
+            con.query('DELETE FROM contacts WHERE contact_id=? AND owner_id=? AND is_pending=1', [contact_id, user_id], (err, results) => {
+                if (err) throw err;
+            });
+        }
+    })
+});
+
+io.listen(6000);
 
 app.listen(PORT, () => {
     console.log('Listening on ' + PORT)
