@@ -3,8 +3,6 @@ import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { AuthContext } from '../contexts/AuthContext';
 import { Theme } from '../components/Theme';
-import { signOut } from '@firebase/auth';
-import * as SecureStore from 'expo-secure-store';
 import { useFocusEffect } from '@react-navigation/core';
 import { socket } from '../components/Socket';
 
@@ -15,19 +13,11 @@ interface getUsernameFields {
 
 export default function MyProfile({ navigation }: { navigation: any }) {
 
-    const { firebaseIdToken } = useContext(AuthContext);
+    const { firebaseIdToken, logout } = useContext(AuthContext);
     const [myUsername, setMyUsername] = useState('');
 
     const handleLogout = () => {
-        // signOut(firebaseAuth).then(() => {
-        //     // Remove user from SecureStore
-        //     SecureStore.deleteItemAsync('firebase_idToken')
-        //         .then(() => {
-        //             navigation.navigate('Lander');
-        //         })
-        // }).catch((error) => {
-        //     alert('Could not sign out');
-        // });
+        logout();
     }
 
     useFocusEffect(

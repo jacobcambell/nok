@@ -1,6 +1,6 @@
 import React, { createContext, useEffect, useState } from 'react';
 import { initializeApp } from "firebase/app";
-import { getAuth } from 'firebase/auth';
+import { getAuth, signOut } from 'firebase/auth';
 import Loading from '../components/Loading';
 
 const firebaseApp = initializeApp({
@@ -34,8 +34,14 @@ export default function AuthProvider({ children }: { children: any }) {
         })
     }, []);
 
+    const logout = () => {
+        signOut(firebaseAuth).catch((e) => {
+            // Could not sign out for some reason
+        })
+    }
+
     return (
-        <AuthContext.Provider value={{ firebaseIdToken }}>
+        <AuthContext.Provider value={{ firebaseIdToken, logout }}>
             {typeof firebaseIdToken !== 'undefined' ? children : <Loading></Loading>}
         </AuthContext.Provider>
     );
