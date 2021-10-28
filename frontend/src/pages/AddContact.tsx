@@ -1,9 +1,7 @@
-import React, { useContext, useEffect, useState } from 'react'
+import React, { useContext, useState } from 'react'
 import { Text, StyleSheet, Pressable, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Theme } from '../components/Theme';
-import * as SecureStore from 'expo-secure-store'
-import axios from 'axios';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { socket } from '../components/Socket';
 import { useFocusEffect } from '@react-navigation/core';

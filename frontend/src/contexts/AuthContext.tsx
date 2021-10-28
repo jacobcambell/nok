@@ -3,7 +3,6 @@ import { initializeApp } from "firebase/app";
 import { getAuth, signOut, signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { Text } from 'react-native';
 
 import Lander from '../pages/Lander';
 import Main from '../Main';

@@ -1,5 +1,4 @@
 import React, { createContext, useEffect, useState } from 'react';
-import { SafeAreaView, Text } from 'react-native';
 import { socket } from '../components/Socket';
 import Loading from '../components/Loading';
 
