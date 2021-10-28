@@ -17,18 +17,6 @@ const App = () => {
     return (
         <SocketProvider>
             <AuthProvider>
-                <NavigationContainer>
-                    <Stack.Navigator screenOptions={{ headerShown: false, animation: 'none' }}>
-                        <Stack.Screen name="Lander" component={Lander} />
-                        <Stack.Screen name="Login" component={Login} />
-                        <Stack.Screen name="Register" component={Register} />
-                        <Stack.Screen name="Main" component={Main} />
-
-                        <Stack.Screen name="AddContact" component={AddContact} />
-                        <Stack.Screen name="Conversation" component={Conversation} />
-                        <Stack.Screen name="ChangeUsername" component={ChangeUsername} />
-                    </Stack.Navigator>
-                </NavigationContainer>
             </AuthProvider>
         </SocketProvider>
     );
