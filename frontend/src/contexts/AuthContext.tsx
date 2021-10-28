@@ -1,7 +1,17 @@
 import React, { createContext, useEffect, useState } from 'react';
 import { initializeApp } from "firebase/app";
-import { getAuth, signOut } from 'firebase/auth';
-import Loading from '../components/Loading';
+import { getAuth, signOut, signInWithEmailAndPassword } from 'firebase/auth';
+import { NavigationContainer } from '@react-navigation/native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { Text } from 'react-native';
+
+import Lander from '../pages/Lander';
+import Main from '../Main';
+import AddContact from '../pages/AddContact';
+import Conversation from '../pages/Conversation';
+import ChangeUsername from '../pages/ChangeUsername';
+import Login from '../pages/Login';
+import Register from '../pages/Register';
 
 const firebaseApp = initializeApp({
     apiKey: "AIzaSyAnQ4G4n0kigRIap659em1tB3HnLUiL2I8",
@@ -14,6 +24,7 @@ const firebaseApp = initializeApp({
 
 export const AuthContext = createContext<any>(null);
 const firebaseAuth = getAuth();
+const Stack = createNativeStackNavigator();
 
 export default function AuthProvider({ children }: { children: any }) {
 
@@ -21,11 +32,18 @@ export default function AuthProvider({ children }: { children: any }) {
 
     useEffect(() => {
         const unsubscribe = firebaseAuth.onAuthStateChanged((user) => {
-            // Update firebaseIdToken every time auth state changes with Firebase
-            firebaseAuth.currentUser?.getIdToken(true)
-                .then(async (token) => {
-                    setFirebaseIdToken(token);
-                })
+            if (user) {
+                // User is logged in
+                // Update firebaseIdToken every time auth state changes with Firebase
+                firebaseAuth.currentUser?.getIdToken(true)
+                    .then(async (token) => {
+                        setFirebaseIdToken(token);
+                    })
+            }
+            else {
+                // User is not logged in
+                setFirebaseIdToken(undefined);
+            }
         });
 
         // Cleanup
@@ -40,9 +58,40 @@ export default function AuthProvider({ children }: { children: any }) {
         })
     }
 
+    const login = (email: string, password: string) => {
+        return new Promise<void>((resolve, reject) => {
+            signInWithEmailAndPassword(firebaseAuth, email, password)
+                .then(() => {
+                    resolve();
+                })
+                .catch((err) => {
+                    reject();
+                })
+        })
+    }
+
     return (
-        <AuthContext.Provider value={{ firebaseIdToken, logout }}>
-            {typeof firebaseIdToken !== 'undefined' ? children : <Loading></Loading>}
+        <AuthContext.Provider value={{ firebaseIdToken, logout, login }}>
+            {
+                // Show a different stack navigator based on the status of the firebaseIdToken
+                typeof firebaseIdToken !== 'undefined' ?
+                    <NavigationContainer>
+                        <Stack.Navigator screenOptions={{ headerShown: false, animation: 'none' }}>
+                            <Stack.Screen name="Main" component={Main} />
+                            <Stack.Screen name="AddContact" component={AddContact} />
+                            <Stack.Screen name="Conversation" component={Conversation} />
+                            <Stack.Screen name="ChangeUsername" component={ChangeUsername} />
+                        </Stack.Navigator>
+                    </NavigationContainer>
+                    :
+                    <NavigationContainer>
+                        <Stack.Navigator screenOptions={{ headerShown: false, animation: 'none' }}>
+                            <Stack.Screen name="Lander" component={Lander} />
+                            <Stack.Screen name="Login" component={Login} />
+                            <Stack.Screen name="Register" component={Register} />
+                        </Stack.Navigator>
+                    </NavigationContainer>
+            }
         </AuthContext.Provider>
     );
 }
