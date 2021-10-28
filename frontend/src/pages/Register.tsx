@@ -3,14 +3,11 @@ import { Pressable, StyleSheet, Text, View, Image } from "react-native";
 import { TextInput } from 'react-native-gesture-handler';
 import Center from '../components/Center';
 import { Theme } from '../components/Theme';
-import * as SecureStore from 'expo-secure-store';
-import { useFocusEffect } from '@react-navigation/core';
 import { AuthContext } from '../contexts/AuthContext';
-import { createUserWithEmailAndPassword } from "firebase/auth";
 
-const Register = ({ navigation }: { navigation: any }) => {
+const Register = ({ navigation }) => {
 
-    const { firebaseAuth } = useContext(AuthContext);
+    const { register } = useContext(AuthContext);
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [cPassword, setCPassword] = useState('');
@@ -23,24 +20,11 @@ const Register = ({ navigation }: { navigation: any }) => {
 
         setEmail(email.trim());
 
-        createUserWithEmailAndPassword(firebaseAuth, email, password)
-            .then(() => {
-                navigation.navigate('Main');
+        register(email, password)
+            .catch(() => {
+                alert('Could not sign up')
             })
-            .catch((error) => {
-                alert('Error when signing up');
-            });
     }
-
-    useFocusEffect(() => {
-        SecureStore.getItemAsync('firebase_idToken')
-            .then(j => {
-                if (j !== null) {
-                    // User is already logged in
-                    navigation.navigate('Main');
-                }
-            })
-    });
 
     return (
         <Center>

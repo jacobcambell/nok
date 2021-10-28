@@ -1,6 +1,6 @@
 import React, { createContext, useEffect, useState } from 'react';
 import { initializeApp } from "firebase/app";
-import { getAuth, signOut, signInWithEmailAndPassword } from 'firebase/auth';
+import { getAuth, signOut, signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { Text } from 'react-native';
@@ -70,8 +70,20 @@ export default function AuthProvider({ children }: { children: any }) {
         })
     }
 
+    const register = (email: string, password: string) => {
+        return new Promise<void>((resolve, reject) => {
+            createUserWithEmailAndPassword(firebaseAuth, email, password)
+                .then(() => {
+                    resolve();
+                })
+                .catch((err) => {
+                    reject();
+                })
+        })
+    }
+
     return (
-        <AuthContext.Provider value={{ firebaseIdToken, logout, login }}>
+        <AuthContext.Provider value={{ firebaseIdToken, logout, login, register }}>
             {
                 // Show a different stack navigator based on the status of the firebaseIdToken
                 typeof firebaseIdToken !== 'undefined' ?
