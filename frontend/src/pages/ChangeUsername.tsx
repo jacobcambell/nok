@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useContext } from 'react'
 import { Text, StyleSheet, Pressable, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Theme } from '../components/Theme';
@@ -6,9 +6,11 @@ import * as SecureStore from 'expo-secure-store'
 import axios from 'axios';
 import { socket } from '../components/Socket';
 import { useFocusEffect } from '@react-navigation/core';
+import { AuthContext } from '../contexts/AuthContext';
 
 export default function ChangeUsername({ navigation, route }: { navigation: any, route: any }) {
 
+    const { firebaseIdToken } = useContext(AuthContext);
     const [username, setUsername] = useState('');
 
     const handleChange = () => {
@@ -18,13 +20,10 @@ export default function ChangeUsername({ navigation, route }: { navigation: any,
             return;
         }
 
-        SecureStore.getItemAsync('firebase_idToken')
-            .then((idToken) => {
-                socket.emit('change-username', {
-                    idToken,
-                    username
-                })
-            })
+        socket.emit('change-username', {
+            idToken: firebaseIdToken,
+            username
+        })
     }
 
     useFocusEffect(

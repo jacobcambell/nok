@@ -5,27 +5,22 @@ import { Theme } from "./components/Theme";
 import Chat from "./pages/Chat";
 import Contacts from "./pages/Contacts";
 import MyProfile from "./pages/MyProfile";
-import * as SecureStore from 'expo-secure-store';
-import axios from "axios";
-import { AuthContext } from "./contexts/AuthContext";
 import * as Notifications from 'expo-notifications'
 import { socket } from "./components/Socket";
+import { AuthContext } from "./contexts/AuthContext";
 
 const Main = ({ navigation }: { navigation: any }) => {
 
     const Tab = createBottomTabNavigator();
-    const { firebaseAuth } = useContext(AuthContext);
+    const { firebaseIdToken } = useContext(AuthContext);
 
     useEffect(() => {
         registerForPushNotificationsAsync().then((expoPushToken) => {
-            SecureStore.getItemAsync('firebase_idToken').then((token) => {
-                socket.emit('ping', { idToken: token, expoPushToken });
-            })
+            socket.emit('ping', { idToken: firebaseIdToken, expoPushToken });
         })
 
-        SecureStore.getItemAsync('firebase_idToken').then((token) => {
-            socket.emit('ping', { idToken: token });
-        })
+        // Ping regardeless of if user allowed notifications
+        socket.emit('ping', { idToken: firebaseIdToken });
     }, []);
 
     async function registerForPushNotificationsAsync() {

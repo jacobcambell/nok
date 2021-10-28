@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useContext, useEffect, useState } from 'react'
 import { Text, StyleSheet, Pressable, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Theme } from '../components/Theme';
@@ -7,6 +7,7 @@ import axios from 'axios';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { socket } from '../components/Socket';
 import { useFocusEffect } from '@react-navigation/core';
+import { AuthContext } from '../contexts/AuthContext';
 
 interface addContactResults {
     error: boolean,
@@ -15,6 +16,7 @@ interface addContactResults {
 
 export default function AddContact({ navigation }: { navigation: any }) {
 
+    const { firebaseIdToken } = useContext(AuthContext);
     const [contactUsername, setContactUsername] = useState('');
 
     useFocusEffect(
@@ -35,13 +37,10 @@ export default function AddContact({ navigation }: { navigation: any }) {
         }, [])
     );
     const handleAdd = () => {
-        SecureStore.getItemAsync('firebase_idToken')
-            .then((idToken) => {
-                socket.emit('add-contact', {
-                    idToken,
-                    username: contactUsername
-                })
-            })
+        socket.emit('add-contact', {
+            idToken: firebaseIdToken,
+            username: contactUsername
+        })
     }
 
     const goBack = () => {

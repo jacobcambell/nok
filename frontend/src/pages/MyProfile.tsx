@@ -15,24 +15,28 @@ interface getUsernameFields {
 
 export default function MyProfile({ navigation }: { navigation: any }) {
 
-    const { firebaseAuth } = useContext(AuthContext);
+    const { firebaseIdToken } = useContext(AuthContext);
     const [myUsername, setMyUsername] = useState('');
 
     const handleLogout = () => {
-        signOut(firebaseAuth).then(() => {
-            // Remove user from SecureStore
-            SecureStore.deleteItemAsync('firebase_idToken')
-                .then(() => {
-                    navigation.navigate('Lander');
-                })
-        }).catch((error) => {
-            alert('Could not sign out');
-        });
+        // signOut(firebaseAuth).then(() => {
+        //     // Remove user from SecureStore
+        //     SecureStore.deleteItemAsync('firebase_idToken')
+        //         .then(() => {
+        //             navigation.navigate('Lander');
+        //         })
+        // }).catch((error) => {
+        //     alert('Could not sign out');
+        // });
     }
 
     useFocusEffect(
         React.useCallback(() => {
             fetchUsername();
+
+            socket.on('return-username', (data) => {
+                setMyUsername(data.username)
+            })
 
             // Cleanup
             return (() => { socket.off('return-username') })
@@ -44,18 +48,9 @@ export default function MyProfile({ navigation }: { navigation: any }) {
     }
 
     const fetchUsername = () => {
-        SecureStore.getItemAsync('firebase_idToken')
-            .then((idToken) => {
-                if (idToken !== null) {
-                    socket.emit('get-my-username', {
-                        idToken
-                    })
-
-                    socket.on('return-username', (data) => {
-                        setMyUsername(data.username)
-                    })
-                }
-            })
+        socket.emit('get-my-username', {
+            idToken: firebaseIdToken
+        })
     }
 
     return (

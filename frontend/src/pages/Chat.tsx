@@ -1,12 +1,11 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useContext } from 'react'
 import { useFocusEffect } from '@react-navigation/core'
 import { Text, StyleSheet, Pressable, View, ScrollView, Image } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { Theme } from '../components/Theme'
-import * as SecureStore from 'expo-secure-store';
-import axios from 'axios';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { socket } from '../components/Socket'
+import { AuthContext } from '../contexts/AuthContext'
 
 interface MessageThread {
     id: number;
@@ -19,6 +18,8 @@ export default function Chat({ navigation }: { navigation: any }) {
 
     const [messageThreads, setMessageThreads] = useState<MessageThread[]>([]);
     const [fetching, setFetching] = useState<boolean>(false);
+
+    const { firebaseIdToken } = useContext(AuthContext);
 
     useFocusEffect(
         React.useCallback(() => {
@@ -41,14 +42,9 @@ export default function Chat({ navigation }: { navigation: any }) {
     );
 
     const loadThreads = () => {
-        SecureStore.getItemAsync('firebase_idToken')
-            .then((idToken) => {
-                if (idToken !== null) {
-                    socket.emit('get-message-threads', {
-                        idToken
-                    })
-                }
-            })
+        socket.emit('get-message-threads', {
+            idToken: firebaseIdToken
+        })
     }
 
     return (

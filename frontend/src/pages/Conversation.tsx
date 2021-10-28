@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useContext } from 'react'
 import { useFocusEffect } from '@react-navigation/core'
 import { Text, StyleSheet, View, ScrollView, Pressable, TextInput, KeyboardAvoidingView, Platform } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
@@ -7,6 +7,7 @@ import * as SecureStore from 'expo-secure-store';
 import axios from 'axios';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { socket } from '../components/Socket'
+import { AuthContext } from '../contexts/AuthContext'
 
 interface Message {
     message_id: number;
@@ -17,6 +18,7 @@ interface Message {
 
 export default function Conversation({ navigation, route }: { navigation: any, route: any }) {
 
+    const { firebaseIdToken } = useContext(AuthContext);
     const [input, setInput] = useState<string>('');
     const [messages, setMessages] = useState<Message[]>([]);
 
@@ -51,20 +53,10 @@ export default function Conversation({ navigation, route }: { navigation: any, r
     }
 
     const loadMessages = async () => {
-        let token: string | null = '';
-        try {
-            await SecureStore.getItemAsync('firebase_idToken').then((idToken) => { token = idToken })
-        }
-        catch (e) {
-        }
-
-        if (token !== null) {
-            socket.emit('get-conversation-messages', {
-                idToken: token,
-                thread_id: route.params.thread_id
-            })
-        }
-
+        socket.emit('get-conversation-messages', {
+            idToken: firebaseIdToken,
+            thread_id: route.params.thread_id
+        })
     }
 
     useEffect(() => {
@@ -82,14 +74,11 @@ export default function Conversation({ navigation, route }: { navigation: any, r
             return;
         }
 
-        SecureStore.getItemAsync('firebase_idToken')
-            .then((idToken) => {
-                socket.emit('send-message', {
-                    idToken,
-                    thread_id: route.params.thread_id,
-                    message: input
-                })
-            })
+        socket.emit('send-message', {
+            idToken: firebaseIdToken,
+            thread_id: route.params.thread_id,
+            message: input
+        })
     }
 
     return (

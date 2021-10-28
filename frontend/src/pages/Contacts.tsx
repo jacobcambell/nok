@@ -1,11 +1,10 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useContext } from 'react'
 import { Text, StyleSheet, Pressable, View, ScrollView, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Theme } from '../components/Theme';
-import * as SecureStore from 'expo-secure-store';
 import { useFocusEffect } from '@react-navigation/core';
-import axios from 'axios';
 import { socket } from '../components/Socket';
+import { AuthContext } from '../contexts/AuthContext';
 
 interface Contact {
     id: number;
@@ -19,6 +18,7 @@ interface AllContacts {
 
 export default function Contacts({ navigation }: { navigation: any }) {
 
+    const { firebaseIdToken } = useContext(AuthContext);
     const [contacts, setContacts] = useState<AllContacts>({
         active_contacts: [],
         outgoing_contacts: [],
@@ -50,23 +50,17 @@ export default function Contacts({ navigation }: { navigation: any }) {
     }
 
     const processContact = (contact_id: number, command: string) => {
-        SecureStore.getItemAsync('firebase_idToken')
-            .then((idToken) => {
-                socket.emit('process-contact', {
-                    contact_id,
-                    command,
-                    idToken
-                })
-            })
+        socket.emit('process-contact', {
+            contact_id,
+            command,
+            idToken: firebaseIdToken
+        })
     }
 
     const loadContacts = () => {
-        SecureStore.getItemAsync('firebase_idToken')
-            .then((idToken) => {
-                socket.emit('get-contacts', {
-                    idToken
-                })
-            })
+        socket.emit('get-contacts', {
+            idToken: firebaseIdToken
+        })
     }
 
     return (
