@@ -1,10 +1,11 @@
-import React, { createContext, useEffect } from 'react';
+import React, { createContext, useEffect, useState } from 'react';
 import { initializeApp } from "firebase/app";
 import { getAuth } from 'firebase/auth';
 import * as SecureStore from 'expo-secure-store';
 import * as Notifications from 'expo-notifications'
 import axios from 'axios';
 import { socket } from '../components/Socket';
+import { Text } from 'react-native';
 
 const firebaseApp = initializeApp({
     apiKey: "AIzaSyAnQ4G4n0kigRIap659em1tB3HnLUiL2I8",
@@ -20,18 +21,25 @@ const firebaseAuth = getAuth();
 
 export default function AuthProvider({ children }: { children: any }) {
 
+    const [firebaseIdToken, setFirebaseIdToken] = useState('');
+
     useEffect(() => {
-        firebaseAuth.onAuthStateChanged((user) => {
+        const unsubscribe = firebaseAuth.onAuthStateChanged((user) => {
+            // Update firebaseIdToken every time auth state changes with Firebase
             firebaseAuth.currentUser?.getIdToken(true)
                 .then(async (token) => {
-                    // Save the user's idToken to SecureStore
-                    SecureStore.setItemAsync('firebase_idToken', token);
+                    setFirebaseIdToken(token);
                 })
         });
+
+        // Cleanup
+        return (() => {
+            unsubscribe();
+        })
     }, []);
 
     return (
-        <AuthContext.Provider value={{ firebaseAuth }}>
+        <AuthContext.Provider value={{ firebaseIdToken }}>
             {children}
         </AuthContext.Provider>
     );
