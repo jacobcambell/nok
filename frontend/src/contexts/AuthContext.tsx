@@ -1,11 +1,7 @@
 import React, { createContext, useEffect, useState } from 'react';
 import { initializeApp } from "firebase/app";
 import { getAuth } from 'firebase/auth';
-import * as SecureStore from 'expo-secure-store';
-import * as Notifications from 'expo-notifications'
-import axios from 'axios';
-import { socket } from '../components/Socket';
-import { Text } from 'react-native';
+import Loading from '../components/Loading';
 
 const firebaseApp = initializeApp({
     apiKey: "AIzaSyAnQ4G4n0kigRIap659em1tB3HnLUiL2I8",
@@ -21,7 +17,7 @@ const firebaseAuth = getAuth();
 
 export default function AuthProvider({ children }: { children: any }) {
 
-    const [firebaseIdToken, setFirebaseIdToken] = useState('');
+    const [firebaseIdToken, setFirebaseIdToken] = useState<string | undefined>();
 
     useEffect(() => {
         const unsubscribe = firebaseAuth.onAuthStateChanged((user) => {
@@ -40,7 +36,7 @@ export default function AuthProvider({ children }: { children: any }) {
 
     return (
         <AuthContext.Provider value={{ firebaseIdToken }}>
-            {children}
+            {typeof firebaseIdToken !== 'undefined' ? children : <Loading></Loading>}
         </AuthContext.Provider>
     );
 }
