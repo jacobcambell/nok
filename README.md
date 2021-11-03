@@ -6,5 +6,3 @@ Nok is an instant messaging app built with React Native.
 - Uses Firebase for user authentication
 - Backend API built with Node/Express (TypeScript)
 - MySQL database for storing messages, usernames, etc.
-
-The project is currently under development.
