@@ -1,7 +1,7 @@
 # Nok
 Nok is an instant messaging app built with React Native.
 
-Live Demo:
+### Live Demo:
 
 App Store: search for Nok!
 
